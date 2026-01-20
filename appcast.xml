@@ -7,14 +7,14 @@
     <language>en</language>
 
     <item>
-      <title>WriterPro 1.0</title>
-      <sparkle:version>1</sparkle:version>
-      <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
-      <pubDate>Mon, 20 Jan 2025 00:00:00 +0000</pubDate>
+      <title>WriterPro 1.0.1</title>
+      <sparkle:version>2</sparkle:version>
+      <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
+      <pubDate>Mon, 20 Jan 2025 01:00:00 +0000</pubDate>
       <enclosure
         url="https://ndimaria3311.github.io/writerpro-site/WriterPro.dmg"
-        sparkle:edSignature="+2KdYI9uqnWn79NkmG7UjHkldvV2iX3fKxVhbdtD7gZg6dmFu7zwbbL3rpPdEUZxIbKjOZj1vnnS9PChWz16CQ=="
-        length="934272"
+        sparkle:edSignature="DoPQoajojExI9x7Mqnbwd7S2BZ2Pqh/qLPmJJApyiTLCRjcpv6anECnNubi7PDDXgYCEnf/U64LmzWJStlTtCw=="
+        length="1643667"
         type="application/octet-stream" />
     </item>
   </channel>
