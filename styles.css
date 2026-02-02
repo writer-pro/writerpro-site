@@ -361,6 +361,7 @@ a {
   border-radius: 22px;
   padding: 22px;
   box-shadow: var(--shadow);
+  color: var(--text);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -384,6 +385,7 @@ a {
   font-size: 20px;
   font-weight: 700;
   letter-spacing: 0.6px;
+  color: var(--text);
 }
 
 .price-sub {
