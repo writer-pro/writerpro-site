@@ -14,8 +14,8 @@
         <div class="nav-actions">
           <a class="btn btn-outline" href="#features">FEATURES</a>
           <a class="btn btn-outline" href="#pricing">PRICING</a>
-          <a class="btn btn-outline page-link" href="app.html">SIGN IN</a>
-          <a class="btn btn-outline page-link" href="billing.html">BILLING</a>
+          <a class="btn btn-outline page-link" id="nav-auth" href="app.html">SIGN IN</a>
+          <a class="btn btn-outline page-link is-disabled" id="nav-billing" href="billing.html" aria-disabled="true">BILLING</a>
           <a class="btn btn-primary js-download" href="WriterPro.dmg" data-download="WriterPro.dmg">DOWNLOAD</a>
         </div>
       </nav>
@@ -262,9 +262,39 @@
 
     <script>
       document.body.classList.add("page-enter");
+      let session = null;
+      const navAuthBtn = document.getElementById("nav-auth");
+      const navBillingBtn = document.getElementById("nav-billing");
+
+      function loadSession() {
+        try {
+          const raw = localStorage.getItem("wp_session");
+          if (raw) session = JSON.parse(raw);
+        } catch {
+          session = null;
+        }
+      }
+
+      function updateNavAuthState() {
+        const signedIn = !!session?.access_token;
+        navAuthBtn.textContent = signedIn ? "DASHBOARD" : "SIGN IN";
+        navAuthBtn.setAttribute("href", signedIn ? "billing.html" : "app.html");
+        navBillingBtn.classList.toggle("is-disabled", !signedIn);
+        navBillingBtn.setAttribute("aria-disabled", signedIn ? "false" : "true");
+      }
+
+      loadSession();
+      updateNavAuthState();
+
       const pageLinks = document.querySelectorAll(".page-link");
       pageLinks.forEach((link) => {
         link.addEventListener("click", (event) => {
+          if (link.id === "nav-billing" && !session?.access_token) {
+            event.preventDefault();
+            document.body.classList.add("page-exit");
+            setTimeout(() => { window.location.href = "app.html"; }, 240);
+            return;
+          }
           event.preventDefault();
           document.body.classList.add("page-exit");
           const href = link.getAttribute("href");

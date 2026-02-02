@@ -183,6 +183,11 @@ a {
   color: var(--accent);
 }
 
+.btn.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .hero-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

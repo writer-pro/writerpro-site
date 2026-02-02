@@ -12,8 +12,8 @@
         <div class="logo">WRITER PRO</div>
         <div class="nav-actions">
           <a class="btn btn-outline page-link" href="index.html">HOME</a>
-          <a class="btn btn-outline page-link" href="billing.html">BILLING</a>
-          <a class="btn btn-primary" href="#account">SIGN IN</a>
+          <a class="btn btn-outline page-link is-disabled" id="nav-billing" href="billing.html" aria-disabled="true">BILLING</a>
+          <a class="btn btn-primary page-link" id="nav-auth" href="#account">SIGN IN</a>
         </div>
       </nav>
 
@@ -63,6 +63,9 @@
       const authSpinner = document.getElementById("auth-spinner");
       const loginBtn = document.getElementById("login");
       const signupBtn = document.getElementById("signup");
+      const navAuthBtn = document.getElementById("nav-auth");
+      const navBillingBtn = document.getElementById("nav-billing");
+      const goBillingBtn = document.getElementById("go-billing");
 
       let session = null;
 
@@ -79,6 +82,17 @@
         } catch {
           session = null;
         }
+      }
+
+      function updateSessionUI() {
+        const signedIn = !!session?.access_token;
+        navAuthBtn.textContent = signedIn ? "DASHBOARD" : "SIGN IN";
+        navAuthBtn.setAttribute("href", signedIn ? "billing.html" : "#account");
+        navBillingBtn.classList.toggle("is-disabled", !signedIn);
+        navBillingBtn.setAttribute("aria-disabled", signedIn ? "false" : "true");
+        goBillingBtn.classList.toggle("is-disabled", !signedIn);
+        goBillingBtn.setAttribute("aria-disabled", signedIn ? "false" : "true");
+        goBillingBtn.textContent = signedIn ? "Open Dashboard" : "Sign in to unlock dashboard";
       }
 
       async function supabaseRequest(path, options) {
@@ -108,6 +122,7 @@
             return;
           }
           storeSession(await res.json());
+          updateSessionUI();
           authStatus.textContent = "Signed in. Redirecting to billing...";
           setTimeout(() => navigateWithFade("billing.html"), 450);
         } finally {
@@ -132,6 +147,7 @@
 
       function signOut() {
         storeSession(null);
+        updateSessionUI();
         authStatus.textContent = "Signed out.";
       }
 
@@ -142,8 +158,15 @@
 
       document.querySelectorAll(".page-link").forEach((link) => {
         link.addEventListener("click", (event) => {
+          const href = link.getAttribute("href") || "";
+          if (href.startsWith("#")) return;
+          if ((link.id === "nav-billing" || link.id === "go-billing") && !session?.access_token) {
+            event.preventDefault();
+            authStatus.textContent = "Please sign in first.";
+            return;
+          }
           event.preventDefault();
-          navigateWithFade(link.getAttribute("href"));
+          navigateWithFade(href);
         });
       });
 
@@ -152,6 +175,7 @@
       document.getElementById("logout").addEventListener("click", signOut);
 
       loadSession();
+      updateSessionUI();
       if (session?.access_token) {
         authStatus.textContent = "Already signed in.";
       }
