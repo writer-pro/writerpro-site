@@ -16,7 +16,7 @@
           <a class="btn btn-outline" href="#pricing">PRICING</a>
           <a class="btn btn-outline page-link is-disabled" id="nav-dashboard" href="billing.html" aria-disabled="true">DASHBOARD</a>
           <a class="btn btn-outline page-link" id="nav-auth" href="app.html">SIGN IN</a>
-          <a class="btn btn-primary js-download" href="WriterPro.dmg" data-download="WriterPro.dmg">DOWNLOAD</a>
+          <a class="btn btn-primary page-link" href="download.html">DOWNLOAD</a>
         </div>
       </nav>
 
@@ -27,7 +27,7 @@
             Human-style typing with AI outline support. Built for macOS.
           </p>
           <div class="cta-row">
-            <a class="btn btn-primary btn-lg js-download" href="WriterPro.dmg" data-download="WriterPro.dmg">DOWNLOAD FOR macOS</a>
+            <a class="btn btn-primary btn-lg page-link" href="download.html">GET WRITER PRO</a>
             <a class="btn btn-outline btn-lg" href="#demo">WATCH DEMO</a>
           </div>
           <div class="hero-stats">
@@ -216,15 +216,6 @@
       </div>
     </section>
 
-    <section class="section" id="download">
-      <div class="download-card">
-        <h2>GET WRITER PRO FOR macOS</h2>
-        <p>Built for macOS 12 or later. Download, install, and start typing.</p>
-        <a class="btn btn-primary btn-lg js-download" href="WriterPro.dmg" data-download="WriterPro.dmg">DOWNLOAD NOW</a>
-        <div class="small">macOS 12+</div>
-      </div>
-    </section>
-
     <section class="section" id="demo">
       <h2>DEMO</h2>
       <div class="card demo-card">
@@ -240,26 +231,6 @@
         <a href="privacy.html">Privacy</a>
       </div>
     </footer>
-
-    <div class="modal hidden" id="download-modal" role="dialog" aria-modal="true" aria-labelledby="download-title">
-      <div class="modal-card">
-        <h3 id="download-title">Before You Download</h3>
-        <p>
-          By downloading Writer Pro, you agree to the
-          <a href="terms.html" target="_blank" rel="noreferrer">Terms of Service</a>
-          and
-          <a href="privacy.html" target="_blank" rel="noreferrer">Privacy Policy</a>.
-        </p>
-        <label class="agree">
-          <input type="checkbox" id="agree-check" />
-          <span>I agree to the Terms and Privacy Policy.</span>
-        </label>
-        <div class="modal-actions">
-          <button class="btn btn-outline" id="download-cancel">Cancel</button>
-          <button class="btn btn-primary" id="download-confirm" disabled>Download</button>
-        </div>
-      </div>
-    </div>
 
     <script>
       document.body.classList.add("page-enter");
@@ -349,49 +320,6 @@
         });
       });
 
-      const modal = document.getElementById("download-modal");
-      const agreeCheck = document.getElementById("agree-check");
-      const confirmBtn = document.getElementById("download-confirm");
-      const cancelBtn = document.getElementById("download-cancel");
-      const downloadLinks = document.querySelectorAll(".js-download");
-      let downloadHref = "WriterPro.dmg";
-
-      downloadLinks.forEach((link) => {
-        link.addEventListener("click", (e) => {
-          e.preventDefault();
-          if (!hasSessionToken()) {
-            const target = `index.html?download=1#download`;
-            document.body.classList.add("page-exit");
-            setTimeout(() => { window.location.href = `app.html?next=${encodeURIComponent(target)}`; }, 240);
-            return;
-          }
-          downloadHref = link.getAttribute("data-download") || "WriterPro.dmg";
-          modal.classList.remove("hidden");
-          agreeCheck.checked = false;
-          confirmBtn.disabled = true;
-        });
-      });
-
-      agreeCheck.addEventListener("change", () => {
-        confirmBtn.disabled = !agreeCheck.checked;
-      });
-
-      confirmBtn.addEventListener("click", () => {
-        window.location.href = downloadHref;
-        modal.classList.add("hidden");
-      });
-
-      cancelBtn.addEventListener("click", () => {
-        modal.classList.add("hidden");
-      });
-
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get("download") === "1" && hasSessionToken()) {
-        downloadHref = "WriterPro.dmg";
-        modal.classList.remove("hidden");
-        agreeCheck.checked = false;
-        confirmBtn.disabled = true;
-      }
     </script>
   </body>
 </html>
