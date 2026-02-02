@@ -317,8 +317,8 @@
         refreshCredits();
       }
 
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("checkout") === "success") {
+      const checkoutParams = new URLSearchParams(window.location.search);
+      if (checkoutParams.get("checkout") === "success") {
         billingStatus.textContent = "Purchase complete. Refreshing credits...";
         refreshCredits();
       }
