@@ -271,7 +271,8 @@
       function loadSession() {
         try {
           const raw = localStorage.getItem("wp_session");
-          if (raw) session = JSON.parse(raw);
+          const fallback = sessionStorage.getItem("wp_session");
+          if (raw || fallback) session = JSON.parse(raw || fallback);
         } catch {
           session = null;
         }
@@ -309,6 +310,7 @@
             event.preventDefault();
             remoteSignOut().finally(() => {
               localStorage.removeItem("wp_session");
+              sessionStorage.removeItem("wp_session");
               session = null;
               updateNavAuthState();
             });

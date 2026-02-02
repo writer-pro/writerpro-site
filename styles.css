@@ -193,6 +193,10 @@ a {
   pointer-events: none;
 }
 
+.btn.is-loading {
+  opacity: 0.95;
+}
+
 .hero-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

@@ -68,14 +68,21 @@
 
       function storeSession(next) {
         session = next;
-        if (next) localStorage.setItem("wp_session", JSON.stringify(next));
-        else localStorage.removeItem("wp_session");
+        if (next) {
+          const serialized = JSON.stringify(next);
+          localStorage.setItem("wp_session", serialized);
+          sessionStorage.setItem("wp_session", serialized);
+        } else {
+          localStorage.removeItem("wp_session");
+          sessionStorage.removeItem("wp_session");
+        }
       }
 
       function loadSession() {
         try {
           const raw = localStorage.getItem("wp_session");
-          if (raw) session = JSON.parse(raw);
+          const fallback = sessionStorage.getItem("wp_session");
+          if (raw || fallback) session = JSON.parse(raw || fallback);
         } catch {
           session = null;
         }
@@ -98,8 +105,15 @@
 
       function setAuthLoading(isLoading) {
         authSpinner.classList.toggle("active", isLoading);
+        loginBtn.classList.toggle("is-loading", isLoading);
         loginBtn.disabled = isLoading;
         signupBtn.disabled = isLoading;
+        const loginLabel = loginBtn.querySelector("span");
+        if (isLoading) {
+          if (loginLabel) loginLabel.textContent = "Signing In...";
+        } else {
+          if (loginLabel) loginLabel.textContent = "Sign In";
+        }
       }
 
       async function signIn() {
@@ -133,8 +147,7 @@
           }
           updateSessionUI();
           authStatus.textContent = "Signed in. Redirecting to dashboard...";
-          const dashboardUrl = new URL("billing.html?v=12", window.location.href).toString();
-          setTimeout(() => { window.location.replace(dashboardUrl); }, 250);
+          window.location.href = "https://writer-pro.github.io/writerpro-site/billing.html?v=14";
         } finally {
           setAuthLoading(false);
         }
@@ -189,8 +202,7 @@
       loadSession();
       updateSessionUI();
       if (session?.access_token) {
-        const dashboardUrl = new URL("billing.html?v=12", window.location.href).toString();
-        window.location.replace(dashboardUrl);
+        window.location.replace("https://writer-pro.github.io/writerpro-site/billing.html?v=14");
         return;
       }
 
