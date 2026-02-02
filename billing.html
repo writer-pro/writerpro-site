@@ -62,40 +62,15 @@
         </div>
 
         <div class="card">
-          <h3>ACCOUNT SETTINGS</h3>
-          <p>Simple settings you can control from the web dashboard.</p>
+          <h3>ACCOUNT DETAILS</h3>
+          <p>Manage your email and password from the web dashboard.</p>
           <div class="form-stack">
-            <input class="input" id="settings-email" type="email" placeholder="Account email for billing" />
-            <input class="input" id="settings-name" type="text" placeholder="Display name" />
-            <label class="agree">
-              <input type="checkbox" id="settings-emails" />
-              <span>Receive product update emails</span>
-            </label>
-            <label class="agree">
-              <input type="checkbox" id="settings-reduced-motion" />
-              <span>Reduced motion on website</span>
-            </label>
-            <label class="agree">
-              <input type="checkbox" id="settings-auto-refresh" />
-              <span>Auto refresh credits on dashboard open</span>
-            </label>
-            <label class="agree">
-              <input type="checkbox" id="settings-confirm-checkout" />
-              <span>Ask before starting checkout</span>
-            </label>
-            <label class="agree">
-              <input type="checkbox" id="settings-open-new-tab" />
-              <span>Open checkout/portal in a new tab</span>
-            </label>
-            <select class="input" id="settings-preferred-pack">
-              <option value="">Preferred pack (none)</option>
-              <option value="credits_65_monthly">Monthly 65</option>
-              <option value="credits_100">One-time 100</option>
-              <option value="credits_180_monthly">Monthly 180</option>
-              <option value="credits_220">One-time 220</option>
-              <option value="credits_430_monthly">Monthly 430</option>
-            </select>
-            <button class="btn btn-primary" id="settings-save">Save Settings</button>
+            <input class="input" id="account-email" type="email" placeholder="Account email" />
+            <input class="input" id="current-password" type="password" placeholder="Current password" autocomplete="current-password" />
+            <input class="input" id="new-password" type="password" placeholder="New password" autocomplete="new-password" />
+            <input class="input" id="confirm-password" type="password" placeholder="Confirm new password" autocomplete="new-password" />
+            <div class="input muted" id="account-created">Account created: —</div>
+            <button class="btn btn-primary" id="settings-save">Save Account Changes</button>
             <p class="notice" id="settings-status"></p>
           </div>
         </div>
@@ -124,14 +99,11 @@
       const navAuthBtn = document.getElementById("nav-auth");
       const signinLink = document.getElementById("signin-link");
       const logoutBtn = document.getElementById("logout");
-      const settingsName = document.getElementById("settings-name");
-      const settingsEmail = document.getElementById("settings-email");
-      const settingsEmails = document.getElementById("settings-emails");
-      const settingsReducedMotion = document.getElementById("settings-reduced-motion");
-      const settingsAutoRefresh = document.getElementById("settings-auto-refresh");
-      const settingsConfirmCheckout = document.getElementById("settings-confirm-checkout");
-      const settingsOpenNewTab = document.getElementById("settings-open-new-tab");
-      const settingsPreferredPack = document.getElementById("settings-preferred-pack");
+      const accountEmail = document.getElementById("account-email");
+      const currentPassword = document.getElementById("current-password");
+      const newPassword = document.getElementById("new-password");
+      const confirmPassword = document.getElementById("confirm-password");
+      const accountCreated = document.getElementById("account-created");
       const settingsSave = document.getElementById("settings-save");
       const settingsStatus = document.getElementById("settings-status");
       let session = null;
@@ -217,7 +189,7 @@
       }
 
       function markRequestedPack() {
-        const selectedPack = requestedPackId || settingsPreferredPack.value;
+        const selectedPack = requestedPackId || "";
         if (!selectedPack) return;
         let found = false;
         buyButtons.forEach((btn) => {
@@ -292,60 +264,96 @@
       }
 
       function loadSettings() {
-        try {
-          if (settingsEmail) settingsEmail.value = localStorage.getItem("wp_settings_email") || "";
-          if (settingsName) settingsName.value = localStorage.getItem("wp_settings_name") || "";
-          if (settingsEmails) settingsEmails.checked = localStorage.getItem("wp_settings_emails") === "1";
-          if (settingsReducedMotion) settingsReducedMotion.checked = localStorage.getItem("wp_settings_reduced_motion") === "1";
-          if (settingsAutoRefresh) settingsAutoRefresh.checked = localStorage.getItem("wp_settings_auto_refresh") !== "0";
-          if (settingsConfirmCheckout) settingsConfirmCheckout.checked = localStorage.getItem("wp_settings_confirm_checkout") !== "0";
-          if (settingsOpenNewTab) settingsOpenNewTab.checked = localStorage.getItem("wp_settings_open_new_tab") === "1";
-          if (settingsPreferredPack) settingsPreferredPack.value = localStorage.getItem("wp_settings_preferred_pack") || "";
-          document.body.classList.toggle("reduced-motion", !!(settingsReducedMotion && settingsReducedMotion.checked));
-        } catch {
-          if (settingsStatus) settingsStatus.textContent = "Could not load settings in this browser mode.";
-        }
+        if (settingsStatus) settingsStatus.textContent = "";
       }
 
-      function saveSettings() {
+      async function saveSettings() {
+        if (!hasSessionToken()) {
+          settingsStatus.textContent = "Please sign in to update account details.";
+          return;
+        }
+        const emailValue = accountEmail.value.trim().toLowerCase();
+        const currentValue = currentPassword.value;
+        const newValue = newPassword.value;
+        const confirmValue = confirmPassword.value;
+        if (!emailValue || !emailValue.includes("@")) {
+          settingsStatus.textContent = "Enter a valid email address.";
+          return;
+        }
+        if ((newValue || confirmValue || currentValue) && newValue !== confirmValue) {
+          settingsStatus.textContent = "New password confirmation does not match.";
+          return;
+        }
+        settingsStatus.textContent = "Saving account changes...";
+        let updated = false;
         try {
-          localStorage.setItem("wp_settings_email", settingsEmail ? settingsEmail.value.trim().toLowerCase() : "");
-          localStorage.setItem("wp_settings_name", settingsName ? settingsName.value.trim() : "");
-          localStorage.setItem("wp_settings_emails", settingsEmails && settingsEmails.checked ? "1" : "0");
-          localStorage.setItem("wp_settings_reduced_motion", settingsReducedMotion && settingsReducedMotion.checked ? "1" : "0");
-          localStorage.setItem("wp_settings_auto_refresh", settingsAutoRefresh && settingsAutoRefresh.checked ? "1" : "0");
-          localStorage.setItem("wp_settings_confirm_checkout", settingsConfirmCheckout && settingsConfirmCheckout.checked ? "1" : "0");
-          localStorage.setItem("wp_settings_open_new_tab", settingsOpenNewTab && settingsOpenNewTab.checked ? "1" : "0");
-          localStorage.setItem("wp_settings_preferred_pack", settingsPreferredPack ? settingsPreferredPack.value : "");
-          document.body.classList.toggle("reduced-motion", !!(settingsReducedMotion && settingsReducedMotion.checked));
-          markRequestedPack();
-          if (settingsStatus) settingsStatus.textContent = "Settings saved.";
-        } catch {
-          if (settingsStatus) settingsStatus.textContent = "Settings could not be saved (browser blocked storage).";
+          const userRes = await supabaseRequest("/auth/v1/user", { method: "GET" });
+          const user = userRes.ok ? await userRes.json() : null;
+          const currentEmail = user?.email || "";
+          if (emailValue && currentEmail && emailValue !== currentEmail) {
+            const emailRes = await supabaseRequest("/auth/v1/user", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: emailValue })
+            });
+            if (emailRes.ok) {
+              settingsStatus.textContent = "Email update requested. Check your inbox to confirm.";
+              updated = true;
+            } else {
+              settingsStatus.textContent = "Email update failed. Please try again.";
+            }
+          }
+          if (currentValue && newValue) {
+            const verifyRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY },
+              body: JSON.stringify({ email: emailValue, password: currentValue })
+            });
+            if (!verifyRes.ok) {
+              settingsStatus.textContent = "Current password is incorrect.";
+              return;
+            }
+            const nextSession = await verifyRes.json();
+            if (nextSession && nextSession.access_token) {
+              storeSession(nextSession);
+            }
+            const passRes = await supabaseRequest("/auth/v1/user", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ password: newValue })
+            });
+            if (passRes.ok) {
+              settingsStatus.textContent = "Password updated.";
+              updated = true;
+              currentPassword.value = "";
+              newPassword.value = "";
+              confirmPassword.value = "";
+            } else {
+              settingsStatus.textContent = "Password update failed.";
+            }
+          }
+          if (!updated) {
+            settingsStatus.textContent = "No changes detected.";
+          }
+        } catch (error) {
+          settingsStatus.textContent = `Save failed: ${(error && error.message) || "network error"}`;
         }
       }
 
       async function startCheckout(packId) {
         ingestSessionFromHash();
-        const emailFallback = settingsEmail ? settingsEmail.value.trim().toLowerCase() : "";
-        if (!hasSessionToken() && !emailFallback) {
-          billingStatus.textContent = "Sign in required before checkout. Add your account email in settings or sign in.";
+        if (!hasSessionToken()) {
+          billingStatus.textContent = "Sign in required before checkout.";
           const targetBilling = packId ? `billing.html?pack_id=${encodeURIComponent(packId)}` : "billing.html";
           navigateWithFade(`app.html?next=${encodeURIComponent(targetBilling)}`);
           return;
         }
-        if (settingsConfirmCheckout && settingsConfirmCheckout.checked && !window.confirm("Open Stripe checkout for this credit pack?")) {
-          billingStatus.textContent = "Checkout canceled.";
+        const fresh = await ensureFreshSession();
+        if (!fresh) {
+          billingStatus.textContent = "Session expired. Please sign in again.";
+          setBillingLocked(true);
+          navigateWithFade("app.html?signed_out=1");
           return;
-        }
-        if (hasSessionToken()) {
-          const fresh = await ensureFreshSession();
-          if (!fresh) {
-            billingStatus.textContent = "Session expired. Please sign in again.";
-            setBillingLocked(true);
-            navigateWithFade("app.html?signed_out=1");
-            return;
-          }
         }
         buyButtons.forEach((btn) => btn.classList.toggle("is-selected", btn.dataset.pack === packId));
         billingStatus.textContent = "Opening checkout...";
@@ -355,8 +363,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               pack_id: packId,
-              access_token: session && session.access_token ? session.access_token : "",
-              email: emailFallback
+              access_token: session && session.access_token ? session.access_token : ""
             })
           });
           if (!res.ok) {
@@ -389,12 +396,7 @@
             billingStatus.textContent = "Checkout failed: missing checkout URL.";
             return;
           }
-          if (settingsOpenNewTab && settingsOpenNewTab.checked) {
-            window.open(payload.url, "_blank", "noopener,noreferrer");
-            billingStatus.textContent = "Checkout opened in a new tab.";
-          } else {
-            window.location.href = payload.url;
-          }
+          window.location.href = payload.url;
         } catch (error) {
           billingStatus.textContent = `Checkout failed: ${(error && error.message) || "network error"}`;
         }
@@ -447,20 +449,17 @@
       }
 
       async function openPortal() {
-        const emailFallback = settingsEmail ? settingsEmail.value.trim().toLowerCase() : "";
-        if (!hasSessionToken() && !emailFallback) {
-          billingStatus.textContent = "Sign in required before opening portal. Add your account email in settings or sign in.";
+        if (!hasSessionToken()) {
+          billingStatus.textContent = "Sign in required before opening portal.";
           navigateWithFade("app.html?next=billing.html");
           return;
         }
-        if (hasSessionToken()) {
-          const fresh = await ensureFreshSession();
-          if (!fresh) {
-            billingStatus.textContent = "Session expired. Please sign in again.";
-            setBillingLocked(true);
-            navigateWithFade("app.html?signed_out=1");
-            return;
-          }
+        const fresh = await ensureFreshSession();
+        if (!fresh) {
+          billingStatus.textContent = "Session expired. Please sign in again.";
+          setBillingLocked(true);
+          navigateWithFade("app.html?signed_out=1");
+          return;
         }
         billingStatus.textContent = "Opening portal...";
         try {
@@ -468,8 +467,7 @@
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              access_token: session && session.access_token ? session.access_token : "",
-              email: emailFallback
+              access_token: session && session.access_token ? session.access_token : ""
             })
           });
           if (!res.ok) {
@@ -496,12 +494,7 @@
             billingStatus.textContent = "Portal failed: missing portal URL.";
             return;
           }
-          if (settingsOpenNewTab.checked) {
-            window.open(payload.url, "_blank", "noopener,noreferrer");
-            billingStatus.textContent = "Portal opened in a new tab.";
-          } else {
-            window.location.href = payload.url;
-          }
+          window.location.href = payload.url;
         } catch (error) {
           billingStatus.textContent = `Portal failed: ${(error && error.message) || "network error"}`;
         }
@@ -522,11 +515,6 @@
       refreshButton.addEventListener("click", refreshCredits);
       document.getElementById("logout").addEventListener("click", signOut);
       if (settingsSave) settingsSave.addEventListener("click", saveSettings);
-      if (settingsReducedMotion) {
-        settingsReducedMotion.addEventListener("change", () => {
-          document.body.classList.toggle("reduced-motion", settingsReducedMotion.checked);
-        });
-      }
 
       ingestSessionFromHash();
       loadSession();
@@ -535,9 +523,9 @@
       (async function initBilling() {
         if (!hasSessionToken()) {
           setBillingLocked(true);
-          authState.textContent = "Not signed in. Sign in or add your account email to continue.";
+          authState.textContent = "Not signed in. Sign in to continue.";
           markRequestedPack();
-          billingStatus.textContent = "Sign in to unlock automatic credit refresh.";
+          billingStatus.textContent = "Sign in to manage credits.";
           return;
         }
 
@@ -551,12 +539,17 @@
 
         setBillingLocked(false);
         authState.textContent = "Signed in.";
-        markRequestedPack();
-        if (settingsAutoRefresh.checked) {
-          await refreshCredits();
-        } else {
-          billingStatus.textContent = "Auto refresh disabled in settings.";
+        const userRes = await supabaseRequest("/auth/v1/user", { method: "GET" });
+        if (userRes.ok) {
+          const user = await userRes.json();
+          if (accountEmail && user?.email) accountEmail.value = user.email;
+          if (accountCreated && user?.created_at) {
+            const created = new Date(user.created_at);
+            accountCreated.textContent = `Account created: ${created.toLocaleDateString()} ${created.toLocaleTimeString()}`;
+          }
         }
+        markRequestedPack();
+        await refreshCredits();
 
         const checkoutParams = new URLSearchParams(window.location.search);
         if (checkoutParams.get("checkout") === "success") {

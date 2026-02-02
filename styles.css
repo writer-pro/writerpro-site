@@ -510,6 +510,12 @@ a {
   background: var(--surface);
 }
 
+.input.muted {
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface-alt) 85%, transparent);
+  border-color: color-mix(in srgb, var(--border) 80%, transparent);
+}
+
 .notice {
   color: var(--muted);
   font-size: 12px;
