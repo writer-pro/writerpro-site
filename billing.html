@@ -263,7 +263,6 @@
           : "billing.html";
         const signInUrl = new URL(`app.html?next=${encodeURIComponent(targetBilling)}`, window.location.href).toString();
         window.location.replace(signInUrl);
-        return;
       } else {
         setBillingLocked(false);
         authState.textContent = "Signed in.";

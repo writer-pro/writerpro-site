@@ -218,12 +218,11 @@
         const params = new URLSearchParams(window.location.search);
         const next = params.get("next");
         window.location.replace(next && next.trim().length > 0 ? next : `billing.html?v=${Date.now()}`);
-        return;
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("signed_out") === "1") {
-        authStatus.textContent = "Signed out. Please sign in again.";
+      } else {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("signed_out") === "1") {
+          authStatus.textContent = "Signed out. Please sign in again.";
+        }
       }
     </script>
   </body>
