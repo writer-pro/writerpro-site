@@ -134,6 +134,13 @@
         return fetch(`${SUPABASE_URL}${path}`, { ...options, headers });
       }
 
+      async function remoteSignOut() {
+        if (!session?.access_token) return;
+        try {
+          await supabaseRequest("/auth/v1/logout", { method: "POST", headers: { "Content-Type": "application/json" } });
+        } catch {}
+      }
+
       async function refreshCredits() {
         if (!session?.access_token) return;
         billingStatus.textContent = "Refreshing...";
@@ -213,13 +220,15 @@
         window.location.href = payload.url;
       }
 
-      function signOut() {
+      async function signOut() {
+        await remoteSignOut();
         localStorage.removeItem("wp_session");
         session = null;
         setBillingLocked(true);
         updateSessionUI();
         authState.textContent = "Signed out. Please sign in to continue.";
         creditsEl.textContent = "Balance: —";
+        navigateWithFade("app.html?signed_out=1");
       }
 
       buyButtons.forEach((btn) => btn.addEventListener("click", () => startCheckout(btn.dataset.pack)));
@@ -230,9 +239,8 @@
       loadSession();
       updateSessionUI();
       if (!session?.access_token) {
-        setBillingLocked(true);
-        authState.textContent = "Not signed in.";
-        billingStatus.textContent = "Please sign in first.";
+        navigateWithFade("app.html");
+        return;
       } else {
         setBillingLocked(false);
         authState.textContent = "Signed in.";

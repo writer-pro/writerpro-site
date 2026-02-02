@@ -102,6 +102,13 @@
         return fetch(`${SUPABASE_URL}${path}`, { ...options, headers });
       }
 
+      async function remoteSignOut() {
+        if (!session?.access_token) return;
+        try {
+          await supabaseRequest("/auth/v1/logout", { method: "POST", headers: { "Content-Type": "application/json" } });
+        } catch {}
+      }
+
       function setAuthLoading(isLoading) {
         authSpinner.classList.toggle("active", isLoading);
         loginBtn.disabled = isLoading;
@@ -145,7 +152,8 @@
         }
       }
 
-      function signOut() {
+      async function signOut() {
+        await remoteSignOut();
         storeSession(null);
         updateSessionUI();
         authStatus.textContent = "Signed out.";
@@ -177,7 +185,13 @@
       loadSession();
       updateSessionUI();
       if (session?.access_token) {
-        authStatus.textContent = "Already signed in.";
+        navigateWithFade("billing.html");
+        return;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("signed_out") === "1") {
+        authStatus.textContent = "Signed out. Please sign in again.";
       }
     </script>
   </body>
