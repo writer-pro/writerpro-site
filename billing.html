@@ -388,6 +388,11 @@
               const payload = await res.json();
               detail = (payload && (payload.error || payload.message)) || "";
             } catch {}
+            if (!detail) {
+              try {
+                detail = (await res.text()) || "";
+              } catch {}
+            }
             if (res.status === 401) {
               billingStatus.textContent = "Session expired. Redirecting to sign in...";
               setBillingLocked(true);
@@ -444,6 +449,11 @@
               const payload = await res.json();
               detail = (payload && (payload.error || payload.message)) || "";
             } catch {}
+            if (!detail) {
+              try {
+                detail = (await res.text()) || "";
+              } catch {}
+            }
             billingStatus.textContent = detail ? `Portal failed: ${detail}` : `Portal failed (HTTP ${res.status}).`;
             if (res.status === 401) {
               billingStatus.textContent = "Session expired. Redirecting to sign in...";
