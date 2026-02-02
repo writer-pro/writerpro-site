@@ -60,6 +60,24 @@
             <button class="btn btn-primary" id="refresh">Refresh Credits</button>
           </div>
         </div>
+
+        <div class="card">
+          <h3>ACCOUNT SETTINGS</h3>
+          <p>Simple settings you can control from the web dashboard.</p>
+          <div class="form-stack">
+            <input class="input" id="settings-name" type="text" placeholder="Display name" />
+            <label class="agree">
+              <input type="checkbox" id="settings-emails" />
+              <span>Receive product update emails</span>
+            </label>
+            <label class="agree">
+              <input type="checkbox" id="settings-reduced-motion" />
+              <span>Reduced motion on website</span>
+            </label>
+            <button class="btn btn-primary" id="settings-save">Save Settings</button>
+            <p class="notice" id="settings-status"></p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -85,6 +103,11 @@
       const navAuthBtn = document.getElementById("nav-auth");
       const signinLink = document.getElementById("signin-link");
       const logoutBtn = document.getElementById("logout");
+      const settingsName = document.getElementById("settings-name");
+      const settingsEmails = document.getElementById("settings-emails");
+      const settingsReducedMotion = document.getElementById("settings-reduced-motion");
+      const settingsSave = document.getElementById("settings-save");
+      const settingsStatus = document.getElementById("settings-status");
       let session = null;
       const params = new URLSearchParams(window.location.search);
       const requestedPackId = params.get("pack_id");
@@ -143,6 +166,21 @@
         navAuthBtn.setAttribute("href", signedIn ? "#" : "app.html");
         signinLink.style.display = signedIn ? "none" : "inline-flex";
         logoutBtn.style.display = signedIn ? "inline-flex" : "none";
+      }
+
+      function loadSettings() {
+        settingsName.value = localStorage.getItem("wp_settings_name") || "";
+        settingsEmails.checked = localStorage.getItem("wp_settings_emails") === "1";
+        settingsReducedMotion.checked = localStorage.getItem("wp_settings_reduced_motion") === "1";
+        document.body.classList.toggle("reduced-motion", settingsReducedMotion.checked);
+      }
+
+      function saveSettings() {
+        localStorage.setItem("wp_settings_name", settingsName.value.trim());
+        localStorage.setItem("wp_settings_emails", settingsEmails.checked ? "1" : "0");
+        localStorage.setItem("wp_settings_reduced_motion", settingsReducedMotion.checked ? "1" : "0");
+        document.body.classList.toggle("reduced-motion", settingsReducedMotion.checked);
+        settingsStatus.textContent = "Settings saved.";
       }
 
       async function supabaseRequest(path, options) {
@@ -254,8 +292,13 @@
       portalButton.addEventListener("click", openPortal);
       refreshButton.addEventListener("click", refreshCredits);
       document.getElementById("logout").addEventListener("click", signOut);
+      settingsSave.addEventListener("click", saveSettings);
+      settingsReducedMotion.addEventListener("change", () => {
+        document.body.classList.toggle("reduced-motion", settingsReducedMotion.checked);
+      });
 
       loadSession();
+      loadSettings();
       updateSessionUI();
       if (!session?.access_token) {
         const targetBilling = requestedPackId

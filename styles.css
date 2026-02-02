@@ -196,6 +196,10 @@ a {
   pointer-events: none;
 }
 
+.is-hidden {
+  display: none !important;
+}
+
 .btn.is-loading {
   opacity: 0.95;
 }
@@ -673,6 +677,13 @@ a {
   .account-grid {
     grid-template-columns: 1fr;
   }
+}
+
+body.reduced-motion,
+body.reduced-motion * {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
 }
 
 @media (prefers-color-scheme: dark) {

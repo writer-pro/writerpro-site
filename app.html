@@ -12,8 +12,8 @@
         <a class="logo" href="index.html">WRITER PRO</a>
         <div class="nav-actions">
           <a class="btn btn-outline page-link" href="index.html">HOME</a>
-          <a class="btn btn-outline page-link is-disabled" id="nav-billing" href="billing.html" aria-disabled="true">BILLING</a>
-          <a class="btn btn-primary page-link" id="nav-auth" href="#account">SIGN IN</a>
+          <a class="btn btn-outline page-link" href="index.html#download">DOWNLOAD</a>
+          <a class="btn btn-outline page-link is-hidden" id="nav-signout" href="#">SIGN OUT</a>
         </div>
       </nav>
 
@@ -61,8 +61,7 @@
       const authSpinner = document.getElementById("auth-spinner");
       const loginBtn = document.getElementById("login");
       const signupBtn = document.getElementById("signup");
-      const navAuthBtn = document.getElementById("nav-auth");
-      const navBillingBtn = document.getElementById("nav-billing");
+      const navSignOutBtn = document.getElementById("nav-signout");
 
       let session = null;
 
@@ -90,10 +89,7 @@
 
       function updateSessionUI() {
         const signedIn = !!session?.access_token;
-        navAuthBtn.textContent = "SIGN IN";
-        navAuthBtn.setAttribute("href", "#account");
-        navBillingBtn.classList.toggle("is-disabled", !signedIn);
-        navBillingBtn.setAttribute("aria-disabled", signedIn ? "false" : "true");
+        navSignOutBtn.classList.toggle("is-hidden", !signedIn);
       }
 
       async function supabaseRequest(path, options) {
@@ -181,6 +177,22 @@
         }
       }
 
+      async function signOut() {
+        setAuthLoading(true);
+        try {
+          if (session?.access_token) {
+            await supabaseRequest("/auth/v1/logout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" }
+            });
+          }
+        } catch {}
+        storeSession(null);
+        updateSessionUI();
+        authStatus.textContent = "Signed out.";
+        setAuthLoading(false);
+      }
+
       function navigateWithFade(url) {
         document.body.classList.add("page-exit");
         setTimeout(() => { window.location.href = url; }, 240);
@@ -189,12 +201,12 @@
       document.querySelectorAll(".page-link").forEach((link) => {
         link.addEventListener("click", (event) => {
           const href = link.getAttribute("href") || "";
-          if (href.startsWith("#")) return;
-          if (link.id === "nav-billing" && !session?.access_token) {
+          if (link.id === "nav-signout") {
             event.preventDefault();
-            authStatus.textContent = "Please sign in first.";
+            signOut();
             return;
           }
+          if (href.startsWith("#")) return;
           event.preventDefault();
           navigateWithFade(href);
         });
@@ -214,15 +226,9 @@
 
       loadSession();
       updateSessionUI();
-      if (session?.access_token) {
-        const params = new URLSearchParams(window.location.search);
-        const next = params.get("next");
-        window.location.replace(next && next.trim().length > 0 ? next : `billing.html?v=${Date.now()}`);
-      } else {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get("signed_out") === "1") {
-          authStatus.textContent = "Signed out. Please sign in again.";
-        }
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("signed_out") === "1") {
+        authStatus.textContent = "Signed out. Please sign in again.";
       }
     </script>
   </body>
