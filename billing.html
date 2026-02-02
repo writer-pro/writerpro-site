@@ -12,8 +12,8 @@
         <a class="logo" href="index.html">WRITER PRO</a>
         <div class="nav-actions">
           <a class="btn btn-outline page-link" href="index.html">HOME</a>
+          <a class="btn btn-outline page-link" href="index.html#download">DOWNLOAD</a>
           <a class="btn btn-outline page-link" id="nav-auth" href="app.html">SIGN IN</a>
-          <a class="btn btn-primary" href="#billing">BILLING</a>
         </div>
       </nav>
 
@@ -74,6 +74,26 @@
               <input type="checkbox" id="settings-reduced-motion" />
               <span>Reduced motion on website</span>
             </label>
+            <label class="agree">
+              <input type="checkbox" id="settings-auto-refresh" />
+              <span>Auto refresh credits on dashboard open</span>
+            </label>
+            <label class="agree">
+              <input type="checkbox" id="settings-confirm-checkout" />
+              <span>Ask before starting checkout</span>
+            </label>
+            <label class="agree">
+              <input type="checkbox" id="settings-open-new-tab" />
+              <span>Open checkout/portal in a new tab</span>
+            </label>
+            <select class="input" id="settings-preferred-pack">
+              <option value="">Preferred pack (none)</option>
+              <option value="credits_65_monthly">Monthly 65</option>
+              <option value="credits_100">One-time 100</option>
+              <option value="credits_180_monthly">Monthly 180</option>
+              <option value="credits_220">One-time 220</option>
+              <option value="credits_430_monthly">Monthly 430</option>
+            </select>
             <button class="btn btn-primary" id="settings-save">Save Settings</button>
             <p class="notice" id="settings-status"></p>
           </div>
@@ -106,6 +126,10 @@
       const settingsName = document.getElementById("settings-name");
       const settingsEmails = document.getElementById("settings-emails");
       const settingsReducedMotion = document.getElementById("settings-reduced-motion");
+      const settingsAutoRefresh = document.getElementById("settings-auto-refresh");
+      const settingsConfirmCheckout = document.getElementById("settings-confirm-checkout");
+      const settingsOpenNewTab = document.getElementById("settings-open-new-tab");
+      const settingsPreferredPack = document.getElementById("settings-preferred-pack");
       const settingsSave = document.getElementById("settings-save");
       const settingsStatus = document.getElementById("settings-status");
       let session = null;
@@ -161,10 +185,11 @@
       }
 
       function markRequestedPack() {
-        if (!requestedPackId) return;
+        const selectedPack = requestedPackId || settingsPreferredPack.value;
+        if (!selectedPack) return;
         let found = false;
         buyButtons.forEach((btn) => {
-          const selected = btn.dataset.pack === requestedPackId;
+          const selected = btn.dataset.pack === selectedPack;
           btn.classList.toggle("is-selected", selected);
           if (selected) found = true;
         });
@@ -221,6 +246,10 @@
         settingsName.value = localStorage.getItem("wp_settings_name") || "";
         settingsEmails.checked = localStorage.getItem("wp_settings_emails") === "1";
         settingsReducedMotion.checked = localStorage.getItem("wp_settings_reduced_motion") === "1";
+        settingsAutoRefresh.checked = localStorage.getItem("wp_settings_auto_refresh") !== "0";
+        settingsConfirmCheckout.checked = localStorage.getItem("wp_settings_confirm_checkout") !== "0";
+        settingsOpenNewTab.checked = localStorage.getItem("wp_settings_open_new_tab") === "1";
+        settingsPreferredPack.value = localStorage.getItem("wp_settings_preferred_pack") || "";
         document.body.classList.toggle("reduced-motion", settingsReducedMotion.checked);
       }
 
@@ -228,7 +257,12 @@
         localStorage.setItem("wp_settings_name", settingsName.value.trim());
         localStorage.setItem("wp_settings_emails", settingsEmails.checked ? "1" : "0");
         localStorage.setItem("wp_settings_reduced_motion", settingsReducedMotion.checked ? "1" : "0");
+        localStorage.setItem("wp_settings_auto_refresh", settingsAutoRefresh.checked ? "1" : "0");
+        localStorage.setItem("wp_settings_confirm_checkout", settingsConfirmCheckout.checked ? "1" : "0");
+        localStorage.setItem("wp_settings_open_new_tab", settingsOpenNewTab.checked ? "1" : "0");
+        localStorage.setItem("wp_settings_preferred_pack", settingsPreferredPack.value);
         document.body.classList.toggle("reduced-motion", settingsReducedMotion.checked);
+        markRequestedPack();
         settingsStatus.textContent = "Settings saved.";
       }
 
@@ -285,6 +319,10 @@
           navigateWithFade(`app.html?next=${encodeURIComponent(targetBilling)}`);
           return;
         }
+        if (settingsConfirmCheckout.checked && !window.confirm("Open Stripe checkout for this credit pack?")) {
+          billingStatus.textContent = "Checkout canceled.";
+          return;
+        }
         const fresh = await ensureFreshSession();
         if (!fresh) {
           billingStatus.textContent = "Session expired. Please sign in again.";
@@ -323,7 +361,12 @@
             billingStatus.textContent = "Checkout failed: missing checkout URL.";
             return;
           }
-          window.location.href = payload.url;
+          if (settingsOpenNewTab.checked) {
+            window.open(payload.url, "_blank", "noopener,noreferrer");
+            billingStatus.textContent = "Checkout opened in a new tab.";
+          } else {
+            window.location.href = payload.url;
+          }
         } catch (error) {
           billingStatus.textContent = `Checkout failed: ${(error && error.message) || "network error"}`;
         }
@@ -367,7 +410,12 @@
             billingStatus.textContent = "Portal failed: missing portal URL.";
             return;
           }
-          window.location.href = payload.url;
+          if (settingsOpenNewTab.checked) {
+            window.open(payload.url, "_blank", "noopener,noreferrer");
+            billingStatus.textContent = "Portal opened in a new tab.";
+          } else {
+            window.location.href = payload.url;
+          }
         } catch (error) {
           billingStatus.textContent = `Portal failed: ${(error && error.message) || "network error"}`;
         }
@@ -418,7 +466,11 @@
         setBillingLocked(false);
         authState.textContent = "Signed in.";
         markRequestedPack();
-        await refreshCredits();
+        if (settingsAutoRefresh.checked) {
+          await refreshCredits();
+        } else {
+          billingStatus.textContent = "Auto refresh disabled in settings.";
+        }
 
         const checkoutParams = new URLSearchParams(window.location.search);
         if (checkoutParams.get("checkout") === "success") {
