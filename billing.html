@@ -259,6 +259,23 @@
         return true;
       }
 
+      async function validateSession() {
+        if (!hasSessionToken()) return false;
+        try {
+          const res = await supabaseRequest("/auth/v1/user", { method: "GET" });
+          if (res && res.ok) return true;
+          if (res && res.status === 401) {
+            const refreshed = await refreshSession();
+            if (!refreshed) return false;
+            const retry = await supabaseRequest("/auth/v1/user", { method: "GET" }, false);
+            return !!(retry && retry.ok);
+          }
+          return false;
+        } catch {
+          return false;
+        }
+      }
+
       function loadSettings() {
         try {
           if (settingsName) settingsName.value = localStorage.getItem("wp_settings_name") || "";
@@ -481,8 +498,8 @@
           return;
         }
 
-        const fresh = await ensureFreshSession();
-        if (!fresh) {
+        const valid = await validateSession();
+        if (!valid) {
           const targetBilling = requestedPackId
             ? `billing.html?pack_id=${encodeURIComponent(requestedPackId)}`
             : "billing.html";
