@@ -13,7 +13,6 @@
         <div class="nav-actions">
           <a class="btn btn-outline page-link" href="index.html">HOME</a>
           <a class="btn btn-outline page-link" href="index.html#download">DOWNLOAD</a>
-          <a class="btn btn-outline page-link is-hidden" id="nav-signout" href="#">SIGN OUT</a>
         </div>
       </nav>
 
@@ -61,7 +60,6 @@
       const authSpinner = document.getElementById("auth-spinner");
       const loginBtn = document.getElementById("login");
       const signupBtn = document.getElementById("signup");
-      const navSignOutBtn = document.getElementById("nav-signout");
 
       let session = null;
       function hasSessionToken() {
@@ -93,8 +91,7 @@
       }
 
       function updateSessionUI() {
-        const signedIn = hasSessionToken();
-        navSignOutBtn.classList.toggle("is-hidden", !signedIn);
+        // Sign-in page should redirect if already signed in.
       }
 
       async function supabaseRequest(path, options) {
@@ -202,21 +199,6 @@
         }
       }
 
-      async function signOut() {
-        setAuthLoading(true);
-        try {
-          if (hasSessionToken()) {
-            await supabaseRequest("/auth/v1/logout", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" }
-            });
-          }
-        } catch {}
-        storeSession(null);
-        updateSessionUI();
-        authStatus.textContent = "Signed out.";
-        setAuthLoading(false);
-      }
 
       function navigateWithFade(url) {
         document.body.classList.add("page-exit");
@@ -226,11 +208,6 @@
       document.querySelectorAll(".page-link").forEach((link) => {
         link.addEventListener("click", (event) => {
           const href = link.getAttribute("href") || "";
-          if (link.id === "nav-signout") {
-            event.preventDefault();
-            signOut();
-            return;
-          }
           if (href.startsWith("#")) return;
           event.preventDefault();
           navigateWithFade(href);
@@ -254,6 +231,9 @@
       const params = new URLSearchParams(window.location.search);
       if (params.get("signed_out") === "1") {
         authStatus.textContent = "Signed out. Please sign in again.";
+      }
+      if (hasSessionToken()) {
+        goToBilling();
       }
     </script>
   </body>

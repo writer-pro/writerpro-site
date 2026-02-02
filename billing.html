@@ -311,6 +311,7 @@
       }
 
       async function startCheckout(packId) {
+        ingestSessionFromHash();
         if (!hasSessionToken()) {
           billingStatus.textContent = "Sign in required before checkout. Redirecting...";
           const targetBilling = packId ? `billing.html?pack_id=${encodeURIComponent(packId)}` : "billing.html";
