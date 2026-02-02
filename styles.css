@@ -60,6 +60,7 @@ a {
   background: radial-gradient(circle, rgba(0, 122, 255, 0.18), transparent 60%);
   filter: blur(10px);
   z-index: 0;
+  pointer-events: none;
 }
 
 .hero::before {
@@ -78,6 +79,8 @@ a {
   align-items: center;
   gap: 16px;
   margin-bottom: 42px;
+  position: relative;
+  z-index: 2;
 }
 
 .logo {
@@ -345,6 +348,10 @@ a {
 }
 
 .pricing-card {
+  appearance: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 22px;
@@ -356,6 +363,17 @@ a {
 .pricing-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 24px 60px rgba(15, 15, 25, 0.18);
+}
+
+.pricing-pick:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.buy.is-selected,
+.pricing-pick.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(0, 122, 255, 0.25) inset;
 }
 
 .price {

@@ -127,6 +127,7 @@
           <p>Pick up where you left off with auto-saved project drafts.</p>
         </div>
       </div>
+      <p class="subtitle" style="margin-top: 18px;">Updated weekly — more features coming soon.</p>
     </section>
 
     <section class="section" id="smartness">
@@ -163,26 +164,26 @@
       <h2>CREDITS & PRICING</h2>
       <div class="pricing">
         <div class="pricing-grid">
-          <div class="pricing-card">
+          <button class="pricing-card pricing-pick" data-pack="credits_65_monthly" type="button">
             <div class="price">65 CREDITS</div>
             <div class="price-sub">$4.99 CAD / month</div>
-          </div>
-          <div class="pricing-card">
+          </button>
+          <button class="pricing-card pricing-pick" data-pack="credits_100" type="button">
             <div class="price">100 CREDITS</div>
             <div class="price-sub">$9.99 CAD one-time</div>
-          </div>
-          <div class="pricing-card">
+          </button>
+          <button class="pricing-card pricing-pick" data-pack="credits_180_monthly" type="button">
             <div class="price">180 CREDITS</div>
             <div class="price-sub">$11.99 CAD / month</div>
-          </div>
-          <div class="pricing-card">
+          </button>
+          <button class="pricing-card pricing-pick" data-pack="credits_220" type="button">
             <div class="price">220 CREDITS</div>
             <div class="price-sub">$19.99 CAD one-time</div>
-          </div>
-          <div class="pricing-card">
+          </button>
+          <button class="pricing-card pricing-pick" data-pack="credits_430_monthly" type="button">
             <div class="price">430 CREDITS</div>
             <div class="price-sub">$24.99 CAD / month</div>
-          </div>
+          </button>
         </div>
         <div class="pricing-notes">
           <p>1 credit = 500 characters.</p>
@@ -304,6 +305,7 @@
       updateNavAuthState();
 
       const pageLinks = document.querySelectorAll(".page-link");
+      const pricingPicks = document.querySelectorAll(".pricing-pick");
       pageLinks.forEach((link) => {
         link.addEventListener("click", (event) => {
           if (link.id === "nav-auth" && session?.access_token) {
@@ -326,6 +328,21 @@
           document.body.classList.add("page-exit");
           const href = link.getAttribute("href");
           setTimeout(() => { window.location.href = href; }, 240);
+        });
+      });
+
+      function goToBillingForPack(packId) {
+        const billingPath = `billing.html?pack_id=${encodeURIComponent(packId)}`;
+        const target = session?.access_token
+          ? billingPath
+          : `app.html?next=${encodeURIComponent(billingPath)}`;
+        document.body.classList.add("page-exit");
+        setTimeout(() => { window.location.href = target; }, 240);
+      }
+
+      pricingPicks.forEach((pick) => {
+        pick.addEventListener("click", () => {
+          goToBillingForPack(pick.dataset.pack || "");
         });
       });
 

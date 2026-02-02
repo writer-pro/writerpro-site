@@ -116,11 +116,22 @@
         }
       }
 
+      function goToBilling() {
+        const params = new URLSearchParams(window.location.search);
+        const next = params.get("next");
+        const target = next && next.trim().length > 0 ? next : `billing.html?v=${Date.now()}`;
+        navigateWithFade(target);
+      }
+
       async function signIn() {
         const email = emailEl.value.trim();
         const password = passwordEl.value;
         if (!email || !password) {
           authStatus.textContent = "Enter email and password.";
+          return;
+        }
+        if (!email.includes("@")) {
+          authStatus.textContent = "Enter a valid email address.";
           return;
         }
         setAuthLoading(true);
@@ -147,7 +158,9 @@
           }
           updateSessionUI();
           authStatus.textContent = "Signed in. Redirecting to dashboard...";
-          window.location.href = "https://writer-pro.github.io/writerpro-site/billing.html?v=14";
+          goToBilling();
+        } catch (error) {
+          authStatus.textContent = `Sign in failed: ${error?.message || "network error"}`;
         } finally {
           setAuthLoading(false);
         }
@@ -202,7 +215,9 @@
       loadSession();
       updateSessionUI();
       if (session?.access_token) {
-        window.location.replace("https://writer-pro.github.io/writerpro-site/billing.html?v=14");
+        const params = new URLSearchParams(window.location.search);
+        const next = params.get("next");
+        window.location.replace(next && next.trim().length > 0 ? next : `billing.html?v=${Date.now()}`);
         return;
       }
 

@@ -86,6 +86,8 @@
       const signinLink = document.getElementById("signin-link");
       const logoutBtn = document.getElementById("logout");
       let session = null;
+      const params = new URLSearchParams(window.location.search);
+      const requestedPackId = params.get("pack_id");
 
       function loadSession() {
         try {
@@ -120,6 +122,19 @@
         buyButtons.forEach((btn) => { btn.disabled = locked; });
         portalButton.disabled = locked;
         refreshButton.disabled = locked;
+      }
+
+      function markRequestedPack() {
+        if (!requestedPackId) return;
+        let found = false;
+        buyButtons.forEach((btn) => {
+          const selected = btn.dataset.pack === requestedPackId;
+          btn.classList.toggle("is-selected", selected);
+          if (selected) found = true;
+        });
+        if (found) {
+          billingStatus.textContent = "Selected plan ready. Click it to continue checkout.";
+        }
       }
 
       function updateSessionUI() {
@@ -243,12 +258,16 @@
       loadSession();
       updateSessionUI();
       if (!session?.access_token) {
-        const signInUrl = new URL("app.html?v=12", window.location.href).toString();
+        const targetBilling = requestedPackId
+          ? `billing.html?pack_id=${encodeURIComponent(requestedPackId)}`
+          : "billing.html";
+        const signInUrl = new URL(`app.html?next=${encodeURIComponent(targetBilling)}`, window.location.href).toString();
         window.location.replace(signInUrl);
         return;
       } else {
         setBillingLocked(false);
         authState.textContent = "Signed in.";
+        markRequestedPack();
         refreshCredits();
       }
 
