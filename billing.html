@@ -41,9 +41,9 @@
         <div class="card">
           <h3>SUBSCRIPTIONS</h3>
           <div class="pricing-grid account-pricing-grid">
-            <a class="btn btn-outline buy" data-pack="credits_65_monthly" href="https://buy.stripe.com/eVq00jeDC79826I5KNgMw01" target="_blank" rel="noopener">Monthly 65 • $4.99 CAD</a>
-            <a class="btn btn-outline buy" data-pack="credits_180_monthly" href="https://buy.stripe.com/aFa6oHdzygJIeTu2yBgMw02" target="_blank" rel="noopener">Monthly 180 • $11.99 CAD</a>
-            <a class="btn btn-outline buy" data-pack="credits_430_monthly" href="https://buy.stripe.com/5kQ4gzeDC798bHiehjgMw00" target="_blank" rel="noopener">Monthly 430 • $24.99 CAD</a>
+            <button class="btn btn-outline buy" data-pack="credits_65_monthly" type="button">Monthly 65 • $4.99 CAD</button>
+            <button class="btn btn-outline buy" data-pack="credits_180_monthly" type="button">Monthly 180 • $11.99 CAD</button>
+            <button class="btn btn-outline buy" data-pack="credits_430_monthly" type="button">Monthly 430 • $24.99 CAD</button>
           </div>
           <div class="cta-row" style="margin-top: 12px;">
             <button class="btn btn-outline" id="portal">Manage Subscription</button>
@@ -53,8 +53,8 @@
         <div class="card">
           <h3>ONE-TIME CREDITS</h3>
           <div class="pricing-grid account-pricing-grid">
-            <a class="btn btn-outline buy" data-pack="credits_100" href="https://buy.stripe.com/aFa14n2UU798h1C5KNgMw03" target="_blank" rel="noopener">Buy 100 • $9.99 CAD</a>
-            <a class="btn btn-outline buy" data-pack="credits_220" href="https://buy.stripe.com/00w4gzeDC9hgcLmddfgMw04" target="_blank" rel="noopener">Buy 220 • $19.99 CAD</a>
+            <button class="btn btn-outline buy" data-pack="credits_100" type="button">Buy 100 • $9.99 CAD</button>
+            <button class="btn btn-outline buy" data-pack="credits_220" type="button">Buy 220 • $19.99 CAD</button>
           </div>
           <div class="cta-row" style="margin-top: 12px;">
             <button class="btn btn-primary" id="refresh">Refresh Credits</button>
@@ -111,6 +111,7 @@
     <script>
       const SUPABASE_URL = "https://vnzlaidwxgiaowhxtuvi.supabase.co";
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuemxhaWR3eGdpYW93aHh0dXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MjcwNzksImV4cCI6MjA4NDQwMzA3OX0.AKiGX3xbgMKtUFYxHKEaAKwacFqmjPEsy56ofU1eDQQ";
+      const FN_CREATE_CHECKOUT = "create-checkout-session";
       const FN_PORTAL = "create-portal-session";
 
       const authState = document.getElementById("auth-state");
@@ -309,6 +310,73 @@
         }
       }
 
+      async function startCheckout(packId) {
+        if (!hasSessionToken()) {
+          billingStatus.textContent = "Sign in required before checkout. Redirecting...";
+          const targetBilling = packId ? `billing.html?pack_id=${encodeURIComponent(packId)}` : "billing.html";
+          navigateWithFade(`app.html?next=${encodeURIComponent(targetBilling)}`);
+          return;
+        }
+        if (settingsConfirmCheckout && settingsConfirmCheckout.checked && !window.confirm("Open Stripe checkout for this credit pack?")) {
+          billingStatus.textContent = "Checkout canceled.";
+          return;
+        }
+        const fresh = await ensureFreshSession();
+        if (!fresh) {
+          billingStatus.textContent = "Session expired. Please sign in again.";
+          setBillingLocked(true);
+          navigateWithFade("app.html?signed_out=1");
+          return;
+        }
+        buyButtons.forEach((btn) => btn.classList.toggle("is-selected", btn.dataset.pack === packId));
+        billingStatus.textContent = "Opening checkout...";
+        try {
+          const res = await supabaseRequest(`/functions/v1/${FN_CREATE_CHECKOUT}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pack_id: packId })
+          });
+          if (!res.ok) {
+            let detail = "";
+            try {
+              const payload = await res.json();
+              detail = (payload && (payload.error || payload.message)) || "";
+            } catch {}
+            if (!detail) {
+              try {
+                detail = (await res.text()) || "";
+              } catch {}
+            }
+            if (res.status === 401) {
+              billingStatus.textContent = "Session expired. Redirecting to sign in...";
+              setBillingLocked(true);
+              const targetBilling = packId ? `billing.html?pack_id=${encodeURIComponent(packId)}` : "billing.html";
+              navigateWithFade(`app.html?next=${encodeURIComponent(targetBilling)}&signed_out=1`);
+              return;
+            }
+            if (res.status === 404) {
+              billingStatus.textContent = "Checkout service not found. Confirm Edge Function deployment.";
+              return;
+            }
+            billingStatus.textContent = detail ? `Checkout failed: ${detail}` : `Checkout failed (HTTP ${res.status}).`;
+            return;
+          }
+          const payload = await res.json();
+          if (!payload || !payload.url) {
+            billingStatus.textContent = "Checkout failed: missing checkout URL.";
+            return;
+          }
+          if (settingsOpenNewTab && settingsOpenNewTab.checked) {
+            window.open(payload.url, "_blank", "noopener,noreferrer");
+            billingStatus.textContent = "Checkout opened in a new tab.";
+          } else {
+            window.location.href = payload.url;
+          }
+        } catch (error) {
+          billingStatus.textContent = `Checkout failed: ${(error && error.message) || "network error"}`;
+        }
+      }
+
       async function supabaseRequest(path, options, retry = true) {
         const headers = options.headers || {};
         headers["apikey"] = SUPABASE_ANON_KEY;
@@ -420,11 +488,7 @@
         navigateWithFade("app.html?signed_out=1");
       }
 
-      buyButtons.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          buyButtons.forEach((b) => b.classList.toggle("is-selected", b === btn));
-        });
-      });
+      buyButtons.forEach((btn) => btn.addEventListener("click", () => startCheckout(btn.dataset.pack)));
       portalButton.addEventListener("click", openPortal);
       refreshButton.addEventListener("click", refreshCredits);
       document.getElementById("logout").addEventListener("click", signOut);
