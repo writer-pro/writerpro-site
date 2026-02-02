@@ -264,6 +264,9 @@
     <script>
       document.body.classList.add("page-enter");
       let session = null;
+      function hasSessionToken() {
+        return !!(session && session.access_token);
+      }
       const navAuthBtn = document.getElementById("nav-auth");
       const navDashboardBtn = document.getElementById("nav-dashboard");
       const SUPABASE_URL = "https://vnzlaidwxgiaowhxtuvi.supabase.co";
@@ -280,7 +283,7 @@
       }
 
       function updateNavAuthState() {
-        const signedIn = !!session?.access_token;
+        const signedIn = hasSessionToken();
         navAuthBtn.textContent = signedIn ? "SIGN OUT" : "SIGN IN";
         navAuthBtn.setAttribute("href", signedIn ? "#" : "app.html");
         navDashboardBtn.classList.toggle("is-disabled", !signedIn);
@@ -288,7 +291,7 @@
       }
 
       async function remoteSignOut() {
-        if (!session?.access_token) return;
+        if (!hasSessionToken()) return;
         try {
           await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
             method: "POST",
@@ -308,7 +311,7 @@
       const pricingPicks = document.querySelectorAll(".pricing-pick");
       pageLinks.forEach((link) => {
         link.addEventListener("click", (event) => {
-          if (link.id === "nav-auth" && session?.access_token) {
+          if (link.id === "nav-auth" && hasSessionToken()) {
             event.preventDefault();
             remoteSignOut().finally(() => {
               localStorage.removeItem("wp_session");
@@ -318,7 +321,7 @@
             });
             return;
           }
-          if (link.id === "nav-dashboard" && !session?.access_token) {
+          if (link.id === "nav-dashboard" && !hasSessionToken()) {
             event.preventDefault();
             document.body.classList.add("page-exit");
             setTimeout(() => { window.location.href = "app.html"; }, 240);
@@ -333,7 +336,7 @@
 
       function goToBillingForPack(packId) {
         const billingPath = `billing.html?pack_id=${encodeURIComponent(packId)}`;
-        const target = session?.access_token
+        const target = hasSessionToken()
           ? billingPath
           : `app.html?next=${encodeURIComponent(billingPath)}`;
         document.body.classList.add("page-exit");

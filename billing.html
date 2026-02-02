@@ -109,6 +109,9 @@
       const settingsSave = document.getElementById("settings-save");
       const settingsStatus = document.getElementById("settings-status");
       let session = null;
+      function hasSessionToken() {
+        return !!(session && session.access_token);
+      }
       const params = new URLSearchParams(window.location.search);
       const requestedPackId = params.get("pack_id");
 
@@ -129,7 +132,7 @@
 
       document.querySelectorAll(".page-link").forEach((link) => {
         link.addEventListener("click", (event) => {
-          if (link.id === "nav-auth" && session?.access_token) {
+          if (link.id === "nav-auth" && hasSessionToken()) {
             event.preventDefault();
             signOut();
             return;
@@ -161,7 +164,7 @@
       }
 
       function updateSessionUI() {
-        const signedIn = !!session?.access_token;
+        const signedIn = hasSessionToken();
         navAuthBtn.textContent = signedIn ? "SIGN OUT" : "SIGN IN";
         navAuthBtn.setAttribute("href", signedIn ? "#" : "app.html");
         signinLink.style.display = signedIn ? "none" : "inline-flex";
@@ -186,19 +189,19 @@
       async function supabaseRequest(path, options) {
         const headers = options.headers || {};
         headers["apikey"] = SUPABASE_ANON_KEY;
-        if (session?.access_token) headers["Authorization"] = `Bearer ${session.access_token}`;
+        if (hasSessionToken()) headers["Authorization"] = `Bearer ${session.access_token}`;
         return fetch(`${SUPABASE_URL}${path}`, { ...options, headers });
       }
 
       async function remoteSignOut() {
-        if (!session?.access_token) return;
+        if (!hasSessionToken()) return;
         try {
           await supabaseRequest("/auth/v1/logout", { method: "POST", headers: { "Content-Type": "application/json" } });
         } catch {}
       }
 
       async function refreshCredits() {
-        if (!session?.access_token) return;
+        if (!hasSessionToken()) return;
         billingStatus.textContent = "Refreshing...";
         const userRes = await supabaseRequest("/auth/v1/user", { method: "GET" });
         if (!userRes.ok) {
@@ -206,7 +209,7 @@
           return;
         }
         const user = await userRes.json();
-        const email = user?.email;
+        const email = user ? user.email : "";
         const res = await supabaseRequest(`/rest/v1/profiles?select=credits,email,is_admin&email=eq.${encodeURIComponent(email)}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" }
@@ -216,12 +219,13 @@
           return;
         }
         const data = await res.json();
-        creditsEl.textContent = `Balance: ${data?.[0]?.credits ?? 0}`;
+        const nextCredits = (data && data[0] && typeof data[0].credits === "number") ? data[0].credits : 0;
+        creditsEl.textContent = `Balance: ${nextCredits}`;
         billingStatus.textContent = "";
       }
 
       async function startCheckout(packId) {
-        if (!session?.access_token) {
+        if (!hasSessionToken()) {
           billingStatus.textContent = "Sign in required before checkout.";
           return;
         }
@@ -235,7 +239,7 @@
           let detail = "";
           try {
             const payload = await res.json();
-            detail = payload?.error || payload?.message || "";
+            detail = (payload && (payload.error || payload.message)) || "";
           } catch {}
           billingStatus.textContent = detail ? `Checkout failed: ${detail}` : "Checkout failed.";
           if (res.status === 401) {
@@ -249,7 +253,7 @@
       }
 
       async function openPortal() {
-        if (!session?.access_token) {
+        if (!hasSessionToken()) {
           billingStatus.textContent = "Sign in required before opening portal.";
           return;
         }
@@ -263,7 +267,7 @@
           let detail = "";
           try {
             const payload = await res.json();
-            detail = payload?.error || payload?.message || "";
+            detail = (payload && (payload.error || payload.message)) || "";
           } catch {}
           billingStatus.textContent = detail ? `Portal failed: ${detail}` : "Portal failed.";
           if (res.status === 401) {
@@ -300,7 +304,7 @@
       loadSession();
       loadSettings();
       updateSessionUI();
-      if (!session?.access_token) {
+      if (!hasSessionToken()) {
         const targetBilling = requestedPackId
           ? `billing.html?pack_id=${encodeURIComponent(requestedPackId)}`
           : "billing.html";
