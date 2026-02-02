@@ -11,7 +11,8 @@
       <nav class="nav">
         <a class="logo" href="index.html">WRITER PRO</a>
         <div class="nav-actions">
-          <a class="btn btn-outline page-link" href="index.html">HOME</a>
+          <a class="btn btn-outline page-link" href="features.html">FEATURES</a>
+          <a class="btn btn-outline page-link" href="pricing.html">PRICING</a>
           <a class="btn btn-outline page-link" href="download.html">DOWNLOAD</a>
           <a class="btn btn-outline page-link" id="nav-auth" href="app.html">SIGN IN</a>
         </div>
@@ -26,12 +27,16 @@
     </header>
 
     <section class="section" id="billing">
-      <div class="account-grid">
-        <div class="card">
-          <h3>ACCOUNT STATUS</h3>
-          <p id="auth-state">Checking session...</p>
-          <div class="credit-balance" id="credits">Balance: —</div>
-          <div class="cta-row">
+      <div class="billing-grid">
+        <div class="card span-2">
+          <div class="card-header">
+            <div>
+              <h3>ACCOUNT STATUS</h3>
+              <p id="auth-state">Checking session...</p>
+            </div>
+            <div class="credit-balance" id="credits">Balance: —</div>
+          </div>
+          <div class="cta-row" style="margin-top: 6px;">
             <a class="btn btn-primary page-link" href="app.html" id="signin-link">Sign In</a>
             <button class="btn btn-outline" id="logout">Sign Out</button>
           </div>
@@ -40,6 +45,7 @@
 
         <div class="card">
           <h3>SUBSCRIPTIONS</h3>
+          <p class="subtle">Best value for steady weekly writing.</p>
           <div class="pricing-grid account-pricing-grid">
             <button class="btn btn-outline buy" data-pack="credits_65_monthly" type="button">Monthly 65 (60 + 5 bonus) • $4.99 CAD</button>
             <button class="btn btn-outline buy" data-pack="credits_180_monthly" type="button">Monthly 180 (160 + 20 bonus) • $11.99 CAD</button>
@@ -51,7 +57,8 @@
         </div>
 
         <div class="card">
-          <h3>ONE-TIME CREDITS</h3>
+          <h3>ONE‑TIME CREDITS</h3>
+          <p class="subtle">One‑off top‑ups for larger essays or study sets.</p>
           <div class="pricing-grid account-pricing-grid">
             <button class="btn btn-outline buy" data-pack="credits_100" type="button">Buy 100 (no bonus) • $9.99 CAD</button>
             <button class="btn btn-outline buy" data-pack="credits_220" type="button">Buy 220 (200 + 20 bonus) • $19.99 CAD</button>
@@ -61,13 +68,15 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card span-2">
           <h3>ACCOUNT DETAILS</h3>
-          <p>Manage your email and password from the web dashboard.</p>
+          <p class="subtle">Update your email and password securely.</p>
           <div class="form-stack">
             <input class="input" id="account-email" type="email" placeholder="Account email" />
-            <input class="input" id="current-password" type="password" placeholder="Current password" autocomplete="current-password" />
-            <input class="input" id="new-password" type="password" placeholder="New password" autocomplete="new-password" />
+            <div class="two-col">
+              <input class="input" id="current-password" type="password" placeholder="Current password" autocomplete="current-password" />
+              <input class="input" id="new-password" type="password" placeholder="New password" autocomplete="new-password" />
+            </div>
             <input class="input" id="confirm-password" type="password" placeholder="Confirm new password" autocomplete="new-password" />
             <div class="input muted" id="account-created">Account created: —</div>
             <button class="btn btn-primary" id="settings-save">Save Account Changes</button>
