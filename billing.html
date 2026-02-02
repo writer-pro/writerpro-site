@@ -334,7 +334,7 @@
           const res = await supabaseRequest(`/functions/v1/${FN_CREATE_CHECKOUT}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pack_id: packId })
+            body: JSON.stringify({ pack_id: packId, access_token: session && session.access_token ? session.access_token : "" })
           });
           if (!res.ok) {
             let detail = "";
@@ -441,7 +441,7 @@
           const res = await supabaseRequest(`/functions/v1/${FN_PORTAL}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({})
+            body: JSON.stringify({ access_token: session && session.access_token ? session.access_token : "" })
           });
           if (!res.ok) {
             let detail = "";
