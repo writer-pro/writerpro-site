@@ -145,7 +145,6 @@
       });
 
       function setBillingLocked(locked) {
-        buyButtons.forEach((btn) => { btn.disabled = locked; });
         portalButton.disabled = locked;
         refreshButton.disabled = locked;
       }
@@ -226,58 +225,83 @@
 
       async function startCheckout(packId) {
         if (!hasSessionToken()) {
-          billingStatus.textContent = "Sign in required before checkout.";
+          billingStatus.textContent = "Sign in required before checkout. Redirecting...";
+          const targetBilling = packId ? `billing.html?pack_id=${encodeURIComponent(packId)}` : "billing.html";
+          navigateWithFade(`app.html?next=${encodeURIComponent(targetBilling)}`);
           return;
         }
+        buyButtons.forEach((btn) => btn.classList.toggle("is-selected", btn.dataset.pack === packId));
         billingStatus.textContent = "Opening checkout...";
-        const res = await supabaseRequest(`/functions/v1/${FN_CREATE_CHECKOUT}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pack_id: packId })
-        });
-        if (!res.ok) {
-          let detail = "";
-          try {
-            const payload = await res.json();
-            detail = (payload && (payload.error || payload.message)) || "";
-          } catch {}
-          billingStatus.textContent = detail ? `Checkout failed: ${detail}` : "Checkout failed.";
-          if (res.status === 401) {
-            billingStatus.textContent = "Session expired. Please sign in again.";
-            setBillingLocked(true);
+        try {
+          const res = await supabaseRequest(`/functions/v1/${FN_CREATE_CHECKOUT}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pack_id: packId })
+          });
+          if (!res.ok) {
+            let detail = "";
+            try {
+              const payload = await res.json();
+              detail = (payload && (payload.error || payload.message)) || "";
+            } catch {}
+            if (res.status === 401) {
+              billingStatus.textContent = "Session expired. Please sign in again.";
+              setBillingLocked(true);
+              return;
+            }
+            if (res.status === 404) {
+              billingStatus.textContent = "Checkout service not found. Confirm Edge Function deployment.";
+              return;
+            }
+            billingStatus.textContent = detail ? `Checkout failed: ${detail}` : `Checkout failed (HTTP ${res.status}).`;
+            return;
           }
-          return;
+          const payload = await res.json();
+          if (!payload || !payload.url) {
+            billingStatus.textContent = "Checkout failed: missing checkout URL.";
+            return;
+          }
+          window.location.href = payload.url;
+        } catch (error) {
+          billingStatus.textContent = `Checkout failed: ${(error && error.message) || "network error"}`;
         }
-        const payload = await res.json();
-        window.location.href = payload.url;
       }
 
       async function openPortal() {
         if (!hasSessionToken()) {
           billingStatus.textContent = "Sign in required before opening portal.";
+          navigateWithFade("app.html?next=billing.html");
           return;
         }
         billingStatus.textContent = "Opening portal...";
-        const res = await supabaseRequest(`/functions/v1/${FN_PORTAL}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({})
-        });
-        if (!res.ok) {
-          let detail = "";
-          try {
-            const payload = await res.json();
-            detail = (payload && (payload.error || payload.message)) || "";
-          } catch {}
-          billingStatus.textContent = detail ? `Portal failed: ${detail}` : "Portal failed.";
-          if (res.status === 401) {
-            billingStatus.textContent = "Session expired. Please sign in again.";
-            setBillingLocked(true);
+        try {
+          const res = await supabaseRequest(`/functions/v1/${FN_PORTAL}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({})
+          });
+          if (!res.ok) {
+            let detail = "";
+            try {
+              const payload = await res.json();
+              detail = (payload && (payload.error || payload.message)) || "";
+            } catch {}
+            billingStatus.textContent = detail ? `Portal failed: ${detail}` : `Portal failed (HTTP ${res.status}).`;
+            if (res.status === 401) {
+              billingStatus.textContent = "Session expired. Please sign in again.";
+              setBillingLocked(true);
+            }
+            return;
           }
-          return;
+          const payload = await res.json();
+          if (!payload || !payload.url) {
+            billingStatus.textContent = "Portal failed: missing portal URL.";
+            return;
+          }
+          window.location.href = payload.url;
+        } catch (error) {
+          billingStatus.textContent = `Portal failed: ${(error && error.message) || "network error"}`;
         }
-        const payload = await res.json();
-        window.location.href = payload.url;
       }
 
       async function signOut() {
