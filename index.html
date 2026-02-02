@@ -265,6 +265,8 @@
       let session = null;
       const navAuthBtn = document.getElementById("nav-auth");
       const navBillingBtn = document.getElementById("nav-billing");
+      const SUPABASE_URL = "https://vnzlaidwxgiaowhxtuvi.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuemxhaWR3eGdpYW93aHh0dXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MjcwNzksImV4cCI6MjA4NDQwMzA3OX0.AKiGX3xbgMKtUFYxHKEaAKwacFqmjPEsy56ofU1eDQQ";
 
       function loadSession() {
         try {
@@ -277,10 +279,24 @@
 
       function updateNavAuthState() {
         const signedIn = !!session?.access_token;
-        navAuthBtn.textContent = signedIn ? "DASHBOARD" : "SIGN IN";
-        navAuthBtn.setAttribute("href", signedIn ? "billing.html" : "app.html");
+        navAuthBtn.textContent = signedIn ? "SIGN OUT" : "SIGN IN";
+        navAuthBtn.setAttribute("href", signedIn ? "#" : "app.html");
         navBillingBtn.classList.toggle("is-disabled", !signedIn);
         navBillingBtn.setAttribute("aria-disabled", signedIn ? "false" : "true");
+      }
+
+      async function remoteSignOut() {
+        if (!session?.access_token) return;
+        try {
+          await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${session.access_token}`,
+              "Content-Type": "application/json"
+            }
+          });
+        } catch {}
       }
 
       loadSession();
@@ -289,6 +305,15 @@
       const pageLinks = document.querySelectorAll(".page-link");
       pageLinks.forEach((link) => {
         link.addEventListener("click", (event) => {
+          if (link.id === "nav-auth" && session?.access_token) {
+            event.preventDefault();
+            remoteSignOut().finally(() => {
+              localStorage.removeItem("wp_session");
+              session = null;
+              updateNavAuthState();
+            });
+            return;
+          }
           if (link.id === "nav-billing" && !session?.access_token) {
             event.preventDefault();
             document.body.classList.add("page-exit");

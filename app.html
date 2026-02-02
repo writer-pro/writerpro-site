@@ -38,8 +38,6 @@
               <span class="mini-spinner" id="auth-spinner" aria-hidden="true"></span>
             </button>
             <button class="btn btn-outline" id="signup">Create Account</button>
-            <button class="btn btn-outline" id="logout">Sign Out</button>
-            <a class="btn btn-outline page-link" href="billing.html" id="go-billing">Go to Billing</a>
             <p class="notice" id="auth-status"></p>
           </div>
         </div>
@@ -65,7 +63,6 @@
       const signupBtn = document.getElementById("signup");
       const navAuthBtn = document.getElementById("nav-auth");
       const navBillingBtn = document.getElementById("nav-billing");
-      const goBillingBtn = document.getElementById("go-billing");
 
       let session = null;
 
@@ -86,13 +83,10 @@
 
       function updateSessionUI() {
         const signedIn = !!session?.access_token;
-        navAuthBtn.textContent = signedIn ? "DASHBOARD" : "SIGN IN";
-        navAuthBtn.setAttribute("href", signedIn ? "billing.html" : "#account");
+        navAuthBtn.textContent = "SIGN IN";
+        navAuthBtn.setAttribute("href", "#account");
         navBillingBtn.classList.toggle("is-disabled", !signedIn);
         navBillingBtn.setAttribute("aria-disabled", signedIn ? "false" : "true");
-        goBillingBtn.classList.toggle("is-disabled", !signedIn);
-        goBillingBtn.setAttribute("aria-disabled", signedIn ? "false" : "true");
-        goBillingBtn.textContent = signedIn ? "Open Dashboard" : "Sign in to unlock dashboard";
       }
 
       async function supabaseRequest(path, options) {
@@ -100,13 +94,6 @@
         headers["apikey"] = SUPABASE_ANON_KEY;
         if (session?.access_token) headers["Authorization"] = `Bearer ${session.access_token}`;
         return fetch(`${SUPABASE_URL}${path}`, { ...options, headers });
-      }
-
-      async function remoteSignOut() {
-        if (!session?.access_token) return;
-        try {
-          await supabaseRequest("/auth/v1/logout", { method: "POST", headers: { "Content-Type": "application/json" } });
-        } catch {}
       }
 
       function setAuthLoading(isLoading) {
@@ -152,13 +139,6 @@
         }
       }
 
-      async function signOut() {
-        await remoteSignOut();
-        storeSession(null);
-        updateSessionUI();
-        authStatus.textContent = "Signed out.";
-      }
-
       function navigateWithFade(url) {
         document.body.classList.add("page-exit");
         setTimeout(() => { window.location.href = url; }, 240);
@@ -168,7 +148,7 @@
         link.addEventListener("click", (event) => {
           const href = link.getAttribute("href") || "";
           if (href.startsWith("#")) return;
-          if ((link.id === "nav-billing" || link.id === "go-billing") && !session?.access_token) {
+          if (link.id === "nav-billing" && !session?.access_token) {
             event.preventDefault();
             authStatus.textContent = "Please sign in first.";
             return;
@@ -180,7 +160,6 @@
 
       loginBtn.addEventListener("click", signIn);
       signupBtn.addEventListener("click", signUp);
-      document.getElementById("logout").addEventListener("click", signOut);
 
       loadSession();
       updateSessionUI();

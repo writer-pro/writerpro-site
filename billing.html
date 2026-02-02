@@ -103,6 +103,11 @@
 
       document.querySelectorAll(".page-link").forEach((link) => {
         link.addEventListener("click", (event) => {
+          if (link.id === "nav-auth" && session?.access_token) {
+            event.preventDefault();
+            signOut();
+            return;
+          }
           const href = link.getAttribute("href") || "";
           if (href.startsWith("#")) return;
           event.preventDefault();
@@ -118,12 +123,9 @@
 
       function updateSessionUI() {
         const signedIn = !!session?.access_token;
-        navAuthBtn.textContent = signedIn ? "DASHBOARD" : "SIGN IN";
-        navAuthBtn.setAttribute("href", signedIn ? "#billing" : "app.html");
-        signinLink.textContent = signedIn ? "Dashboard Active" : "Sign In";
-        signinLink.setAttribute("href", signedIn ? "#billing" : "app.html");
-        signinLink.classList.toggle("is-disabled", signedIn);
-        signinLink.setAttribute("aria-disabled", signedIn ? "true" : "false");
+        navAuthBtn.textContent = signedIn ? "SIGN OUT" : "SIGN IN";
+        navAuthBtn.setAttribute("href", signedIn ? "#" : "app.html");
+        signinLink.style.display = signedIn ? "none" : "inline-flex";
         logoutBtn.style.display = signedIn ? "inline-flex" : "none";
       }
 
