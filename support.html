@@ -96,8 +96,6 @@
       document.body.classList.add("page-enter");
       const SUPABASE_URL = "https://vnzlaidwxgiaowhxtuvi.supabase.co";
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuemxhaWR3eGdpYW93aHh0dXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MjcwNzksImV4cCI6MjA4NDQwMzA3OX0.AKiGX3xbgMKtUFYxHKEaAKwacFqmjPEsy56ofU1eDQQ";
-      const SUPPORT_EMAIL = ""; // Set to your support inbox.
-
       const navAuthBtn = document.getElementById("nav-auth");
       const navDashboardBtn = document.getElementById("nav-dashboard");
       let session = null;
@@ -174,7 +172,7 @@
       const submitBtn = document.getElementById("support-submit");
       const statusEl = document.getElementById("support-status");
 
-      submitBtn.addEventListener("click", () => {
+      async function submitTicket() {
         const name = nameInput.value.trim();
         const email = emailInput.value.trim();
         const topic = topicInput.value;
@@ -183,14 +181,56 @@
           statusEl.textContent = "Please provide an email and a message.";
           return;
         }
-        if (!SUPPORT_EMAIL) {
-          statusEl.textContent = "Support inbox not configured yet. Provide a support email and we will wire this up.";
+        if (!email.includes("@")) {
+          statusEl.textContent = "Enter a valid email address.";
           return;
         }
-        const subject = encodeURIComponent(`[Writer Pro Support] ${topic}`);
-        const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\nTopic: ${topic}\n\n${message}`);
-        window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
-      });
+        statusEl.textContent = "Sending support request...";
+        submitBtn.disabled = true;
+        try {
+          const payload = {
+            name,
+            email,
+            topic,
+            message,
+            page_url: window.location.href
+          };
+          const headers = {
+            "Content-Type": "application/json",
+            apikey: SUPABASE_ANON_KEY
+          };
+          if (hasSessionToken()) {
+            headers["Authorization"] = `Bearer ${session.access_token}`;
+          }
+          const res = await fetch(`${SUPABASE_URL}/functions/v1/support-ticket`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) {
+            let detail = "";
+            try {
+              const data = await res.json();
+              detail = data?.error || data?.message || "";
+            } catch {}
+            if (!detail) {
+              try { detail = await res.text(); } catch {}
+            }
+            statusEl.textContent = detail ? `Support request failed: ${detail}` : `Support request failed (HTTP ${res.status}).`;
+            return;
+          }
+          statusEl.textContent = "Ticket submitted. We’ll reply soon.";
+          nameInput.value = "";
+          emailInput.value = "";
+          messageInput.value = "";
+        } catch (error) {
+          statusEl.textContent = `Support request failed: ${(error && error.message) || "network error"}`;
+        } finally {
+          submitBtn.disabled = false;
+        }
+      }
+
+      submitBtn.addEventListener("click", submitTicket);
 
       loadSession();
       updateNavAuthState();
