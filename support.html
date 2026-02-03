@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Writer Pro — Download</title>
+    <title>Writer Pro — Support</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="page-enter">
@@ -16,31 +16,17 @@
           <a class="btn btn-outline page-link" href="support.html">SUPPORT</a>
           <a class="btn btn-outline page-link is-disabled" id="nav-dashboard" href="billing.html" aria-disabled="true">DASHBOARD</a>
           <a class="btn btn-outline page-link" id="nav-auth" href="app.html">SIGN IN</a>
-          <a class="btn btn-primary js-download" href="WriterPro.dmg" data-download="WriterPro.dmg">DOWNLOAD</a>
+          <a class="btn btn-primary page-link" href="download.html">DOWNLOAD</a>
         </div>
       </nav>
 
       <div class="hero-grid">
         <div class="hero-copy">
-          <h1>DOWNLOAD WRITER PRO</h1>
-          <p class="subtitle">Grab the latest macOS build with verified updates and version info.</p>
+          <h1>SUPPORT</h1>
+          <p class="subtitle">Tell us what you need and we’ll get back to you quickly.</p>
           <div class="cta-row">
-            <a class="btn btn-primary btn-lg js-download" href="WriterPro.dmg" data-download="WriterPro.dmg">DOWNLOAD FOR macOS</a>
-            <a class="btn btn-outline btn-lg page-link" href="index.html">BACK TO HOME</a>
-          </div>
-          <div class="hero-stats">
-            <div class="stat">
-              <div class="stat-num">VERSION</div>
-              <div class="stat-label">1.2.3</div>
-            </div>
-            <div class="stat">
-              <div class="stat-num">BUILD</div>
-              <div class="stat-label">14</div>
-            </div>
-            <div class="stat">
-              <div class="stat-num">UPDATED</div>
-              <div class="stat-label">Jan 20, 2025</div>
-            </div>
+            <a class="btn btn-outline btn-lg page-link" href="pricing.html">VIEW PRICING</a>
+            <a class="btn btn-primary btn-lg page-link" href="download.html">DOWNLOAD</a>
           </div>
         </div>
         <div class="hero-mock">
@@ -51,11 +37,11 @@
               <span class="dot"></span>
             </div>
             <div class="mock-body">
-              <div class="mock-title">DOWNLOAD CHECKLIST</div>
+              <div class="mock-title">SUPPORT INBOX</div>
               <div class="mock-row"></div>
               <div class="mock-row"></div>
               <div class="mock-row"></div>
-              <div class="mock-cta">macOS 12+</div>
+              <div class="mock-cta">We’re here</div>
             </div>
           </div>
           <div class="glow"></div>
@@ -63,23 +49,38 @@
       </div>
     </header>
 
-    <section class="section" id="download-details">
+    <section class="section reveal" id="support-form">
+      <h2>SUBMIT A TICKET</h2>
+      <div class="card reveal-up">
+        <p class="subtle">Include your account email and any screenshots or steps to reproduce.</p>
+        <div class="form-stack">
+          <input class="input" id="support-name" type="text" placeholder="Full name" />
+          <input class="input" id="support-email" type="email" placeholder="Account email" autocomplete="email" />
+          <select class="input" id="support-topic">
+            <option value="Billing">Billing</option>
+            <option value="Account">Account</option>
+            <option value="Writer Pro">Writer Pro</option>
+            <option value="Study Pro">Study Pro</option>
+            <option value="Bug">Bug Report</option>
+            <option value="Other">Other</option>
+          </select>
+          <textarea class="input" id="support-message" rows="6" placeholder="Describe the issue, steps to reproduce, and device info."></textarea>
+          <button class="btn btn-primary" id="support-submit">Send Support Request</button>
+          <p class="notice" id="support-status"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal" id="support-info">
+      <h2>OTHER WAYS TO REACH US</h2>
       <div class="cards grid-2">
-        <div class="card">
-          <h3>WHAT'S INCLUDED</h3>
-          <p>Writer Pro for macOS, the latest UI refresh, Study Pro, and smart presets.</p>
+        <div class="card reveal-up">
+          <h3>ACCOUNT HELP</h3>
+          <p>Visit your dashboard for credits, billing, and subscription details.</p>
         </div>
-        <div class="card">
-          <h3>INSTALL CHECKLIST</h3>
-          <p>macOS 12+, unzip if prompted, drag to Applications, then sign in.</p>
-        </div>
-        <div class="card">
-          <h3>SECURITY</h3>
-          <p>Downloads are signed and served directly from the official Writer Pro domain.</p>
-        </div>
-        <div class="card">
-          <h3>NEED HELP?</h3>
-          <p>Sign in to access billing and account settings before installing.</p>
+        <div class="card reveal-up">
+          <h3>QUICK RESPONSE</h3>
+          <p>We typically respond within 24 hours on weekdays.</p>
         </div>
       </div>
     </section>
@@ -91,29 +92,12 @@
       </div>
     </footer>
 
-    <div class="modal hidden" id="download-modal" role="dialog" aria-modal="true" aria-labelledby="download-title">
-      <div class="modal-card">
-        <h3 id="download-title">Before You Download</h3>
-        <p>
-          By downloading Writer Pro, you agree to the
-          <a href="terms.html" target="_blank" rel="noreferrer">Terms of Service</a>
-          and
-          <a href="privacy.html" target="_blank" rel="noreferrer">Privacy Policy</a>.
-        </p>
-        <label class="agree">
-          <input type="checkbox" id="agree-check" />
-          <span>I agree to the Terms and Privacy Policy.</span>
-        </label>
-        <div class="modal-actions">
-          <button class="btn btn-outline" id="download-cancel">Cancel</button>
-          <button class="btn btn-primary" id="download-confirm" disabled>Download</button>
-        </div>
-      </div>
-    </div>
-
     <script>
+      document.body.classList.add("page-enter");
       const SUPABASE_URL = "https://vnzlaidwxgiaowhxtuvi.supabase.co";
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuemxhaWR3eGdpYW93aHh0dXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MjcwNzksImV4cCI6MjA4NDQwMzA3OX0.AKiGX3xbgMKtUFYxHKEaAKwacFqmjPEsy56ofU1eDQQ";
+      const SUPPORT_EMAIL = ""; // Set to your support inbox.
+
       const navAuthBtn = document.getElementById("nav-auth");
       const navDashboardBtn = document.getElementById("nav-dashboard");
       let session = null;
@@ -183,48 +167,43 @@
         });
       });
 
-      const modal = document.getElementById("download-modal");
-      const agreeCheck = document.getElementById("agree-check");
-      const confirmBtn = document.getElementById("download-confirm");
-      const cancelBtn = document.getElementById("download-cancel");
-      const downloadLinks = document.querySelectorAll(".js-download");
-      let downloadHref = "WriterPro.dmg";
+      const nameInput = document.getElementById("support-name");
+      const emailInput = document.getElementById("support-email");
+      const topicInput = document.getElementById("support-topic");
+      const messageInput = document.getElementById("support-message");
+      const submitBtn = document.getElementById("support-submit");
+      const statusEl = document.getElementById("support-status");
 
-      downloadLinks.forEach((link) => {
-        link.addEventListener("click", (e) => {
-          e.preventDefault();
-          if (!hasSessionToken()) {
-            navigateWithFade("app.html?next=download.html%3Fdownload%3D1");
-            return;
-          }
-          downloadHref = link.getAttribute("data-download") || "WriterPro.dmg";
-          modal.classList.remove("hidden");
-          agreeCheck.checked = false;
-          confirmBtn.disabled = true;
-        });
-      });
-
-      agreeCheck.addEventListener("change", () => {
-        confirmBtn.disabled = !agreeCheck.checked;
-      });
-
-      confirmBtn.addEventListener("click", () => {
-        window.location.href = downloadHref;
-        modal.classList.add("hidden");
-      });
-
-      cancelBtn.addEventListener("click", () => {
-        modal.classList.add("hidden");
+      submitBtn.addEventListener("click", () => {
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const topic = topicInput.value;
+        const message = messageInput.value.trim();
+        if (!email || !message) {
+          statusEl.textContent = "Please provide an email and a message.";
+          return;
+        }
+        if (!SUPPORT_EMAIL) {
+          statusEl.textContent = "Support inbox not configured yet. Provide a support email and we will wire this up.";
+          return;
+        }
+        const subject = encodeURIComponent(`[Writer Pro Support] ${topic}`);
+        const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\nTopic: ${topic}\n\n${message}`);
+        window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
       });
 
       loadSession();
       updateNavAuthState();
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("download") === "1" && hasSessionToken()) {
-        modal.classList.remove("hidden");
-        agreeCheck.checked = false;
-        confirmBtn.disabled = true;
-      }
+
+      const revealTargets = document.querySelectorAll(".reveal, .reveal-up");
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in-view");
+          }
+        });
+      }, { threshold: 0.18, rootMargin: "0px 0px -10% 0px" });
+      revealTargets.forEach((el) => observer.observe(el));
     </script>
   </body>
 </html>
