@@ -74,12 +74,14 @@
           <p class="subtle">Update your email and password securely.</p>
           <div class="form-stack">
             <input class="input" id="account-email" type="email" placeholder="Account email" />
-            <div class="two-col">
-              <input class="input" id="current-password" type="password" placeholder="Current password" autocomplete="current-password" />
-              <input class="input" id="new-password" type="password" placeholder="New password" autocomplete="new-password" />
+            <button class="btn btn-outline" id="toggle-password">Change Password</button>
+            <div class="form-stack is-hidden" id="password-panel">
+              <div class="two-col">
+                <input class="input" id="current-password" type="password" placeholder="Current password" autocomplete="current-password" />
+                <input class="input" id="new-password" type="password" placeholder="New password" autocomplete="new-password" />
+              </div>
+              <input class="input" id="confirm-password" type="password" placeholder="Confirm new password" autocomplete="new-password" />
             </div>
-            <input class="input" id="confirm-password" type="password" placeholder="Confirm new password" autocomplete="new-password" />
-            <div class="input muted" id="account-created">Account created: —</div>
             <button class="btn btn-primary" id="settings-save">Save Account Changes</button>
             <p class="notice" id="settings-status"></p>
           </div>
@@ -113,7 +115,8 @@
       const currentPassword = document.getElementById("current-password");
       const newPassword = document.getElementById("new-password");
       const confirmPassword = document.getElementById("confirm-password");
-      const accountCreated = document.getElementById("account-created");
+      const togglePassword = document.getElementById("toggle-password");
+      const passwordPanel = document.getElementById("password-panel");
       const settingsSave = document.getElementById("settings-save");
       const settingsStatus = document.getElementById("settings-status");
       let session = null;
@@ -294,6 +297,9 @@
           settingsStatus.textContent = "New password confirmation does not match.";
           return;
         }
+        if ((newValue || confirmValue || currentValue) && passwordPanel.classList.contains("is-hidden")) {
+          passwordPanel.classList.remove("is-hidden");
+        }
         settingsStatus.textContent = "Saving account changes...";
         let updated = false;
         try {
@@ -338,6 +344,7 @@
               currentPassword.value = "";
               newPassword.value = "";
               confirmPassword.value = "";
+              passwordPanel.classList.add("is-hidden");
             } else {
               settingsStatus.textContent = "Password update failed.";
             }
@@ -525,6 +532,14 @@
       refreshButton.addEventListener("click", refreshCredits);
       document.getElementById("logout").addEventListener("click", signOut);
       if (settingsSave) settingsSave.addEventListener("click", saveSettings);
+      if (togglePassword && passwordPanel) {
+        togglePassword.addEventListener("click", () => {
+          passwordPanel.classList.toggle("is-hidden");
+          togglePassword.textContent = passwordPanel.classList.contains("is-hidden")
+            ? "Change Password"
+            : "Hide Password Fields";
+        });
+      }
 
       ingestSessionFromHash();
       loadSession();
@@ -553,10 +568,6 @@
         if (userRes.ok) {
           const user = await userRes.json();
           if (accountEmail && user?.email) accountEmail.value = user.email;
-          if (accountCreated && user?.created_at) {
-            const created = new Date(user.created_at);
-            accountCreated.textContent = `Account created: ${created.toLocaleDateString()} ${created.toLocaleTimeString()}`;
-          }
         }
         markRequestedPack();
         await refreshCredits();
