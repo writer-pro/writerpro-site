@@ -2,13 +2,248 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="refresh" content="0; url=/writerpro-site/#/support" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Redirecting...</title>
+    <title>Writer Pro — Support</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="page-enter">
+    <header class="hero">
+      <nav class="nav">
+        <a class="logo" href="index.html">WRITER PRO</a>
+        <div class="nav-actions">
+          <a class="btn btn-outline page-link" href="features.html">FEATURES</a>
+          <a class="btn btn-outline page-link" href="pricing.html">PRICING</a>
+          <a class="btn btn-outline page-link" href="support.html">SUPPORT</a>
+          <a class="btn btn-outline page-link is-disabled" id="nav-dashboard" href="billing.html" aria-disabled="true">DASHBOARD</a>
+          <a class="btn btn-outline page-link" id="nav-auth" href="app.html">SIGN IN</a>
+          <a class="btn btn-primary page-link" href="download.html">DOWNLOAD</a>
+        </div>
+      </nav>
+
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <h1>SUPPORT</h1>
+          <p class="subtitle">Tell us what you need and we’ll get back to you quickly.</p>
+          <div class="cta-row">
+            <a class="btn btn-outline btn-lg page-link" href="pricing.html">VIEW PRICING</a>
+            <a class="btn btn-primary btn-lg page-link" href="download.html">DOWNLOAD</a>
+          </div>
+        </div>
+        <div class="hero-mock">
+          <div class="mock-card">
+            <div class="mock-bar">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+            <div class="mock-body">
+              <div class="mock-title">SUPPORT INBOX</div>
+              <div class="mock-row"></div>
+              <div class="mock-row"></div>
+              <div class="mock-row"></div>
+              <div class="mock-cta">We’re here</div>
+            </div>
+          </div>
+          <div class="glow"></div>
+        </div>
+      </div>
+    </header>
+
+    <section class="section reveal" id="support-form">
+      <h2>SUBMIT A TICKET</h2>
+      <div class="card reveal-up">
+        <p class="subtle">Include your account email and any screenshots or steps to reproduce.</p>
+        <div class="form-stack">
+          <input class="input" id="support-name" type="text" placeholder="Full name" />
+          <input class="input" id="support-email" type="email" placeholder="Account email" autocomplete="email" />
+          <select class="input" id="support-topic">
+            <option value="Billing">Billing</option>
+            <option value="Account">Account</option>
+            <option value="Writer Pro">Writer Pro</option>
+            <option value="Study Pro">Study Pro</option>
+            <option value="Bug">Bug Report</option>
+            <option value="Other">Other</option>
+          </select>
+          <textarea class="input" id="support-message" rows="6" placeholder="Describe the issue, steps to reproduce, and device info."></textarea>
+          <button class="btn btn-primary" id="support-submit">Send Support Request</button>
+          <p class="notice" id="support-status"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal" id="support-info">
+      <h2>OTHER WAYS TO REACH US</h2>
+      <div class="cards grid-2">
+        <div class="card reveal-up">
+          <h3>ACCOUNT HELP</h3>
+          <p>Visit your dashboard for credits, billing, and subscription details.</p>
+        </div>
+        <div class="card reveal-up">
+          <h3>QUICK RESPONSE</h3>
+          <p>We typically respond within 24 hours on weekdays.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-links">
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </footer>
+
     <script>
-      window.location.replace("/writerpro-site/#/support");
+      document.body.classList.add("page-enter");
+      const SUPABASE_URL = "https://vnzlaidwxgiaowhxtuvi.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuemxhaWR3eGdpYW93aHh0dXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MjcwNzksImV4cCI6MjA4NDQwMzA3OX0.AKiGX3xbgMKtUFYxHKEaAKwacFqmjPEsy56ofU1eDQQ";
+      const navAuthBtn = document.getElementById("nav-auth");
+      const navDashboardBtn = document.getElementById("nav-dashboard");
+      let session = null;
+
+      function hasSessionToken() {
+        return !!(session && session.access_token);
+      }
+
+      function loadSession() {
+        try {
+          const raw = localStorage.getItem("wp_session");
+          const fallback = sessionStorage.getItem("wp_session");
+          if (raw || fallback) session = JSON.parse(raw || fallback);
+        } catch {
+          session = null;
+        }
+      }
+
+      function updateNavAuthState() {
+        const signedIn = hasSessionToken();
+        navAuthBtn.textContent = signedIn ? "SIGN OUT" : "SIGN IN";
+        navAuthBtn.setAttribute("href", signedIn ? "#" : "app.html");
+        navDashboardBtn.classList.toggle("is-disabled", !signedIn);
+        navDashboardBtn.setAttribute("aria-disabled", signedIn ? "false" : "true");
+      }
+
+      async function remoteSignOut() {
+        if (!hasSessionToken()) return;
+        try {
+          await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${session.access_token}`,
+              "Content-Type": "application/json"
+            }
+          });
+        } catch {}
+      }
+
+      function navigateWithFade(url) {
+        document.body.classList.add("page-exit");
+        setTimeout(() => { window.location.href = url; }, 240);
+      }
+
+      document.querySelectorAll(".page-link").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          const href = link.getAttribute("href") || "";
+          if (link.id === "nav-auth" && hasSessionToken()) {
+            event.preventDefault();
+            remoteSignOut().finally(() => {
+              localStorage.removeItem("wp_session");
+              sessionStorage.removeItem("wp_session");
+              session = null;
+              updateNavAuthState();
+            });
+            return;
+          }
+          if (link.id === "nav-dashboard" && !hasSessionToken()) {
+            event.preventDefault();
+            navigateWithFade("app.html");
+            return;
+          }
+          if (href.startsWith("#")) return;
+          event.preventDefault();
+          navigateWithFade(href);
+        });
+      });
+
+      const nameInput = document.getElementById("support-name");
+      const emailInput = document.getElementById("support-email");
+      const topicInput = document.getElementById("support-topic");
+      const messageInput = document.getElementById("support-message");
+      const submitBtn = document.getElementById("support-submit");
+      const statusEl = document.getElementById("support-status");
+
+      async function submitTicket() {
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const topic = topicInput.value;
+        const message = messageInput.value.trim();
+        if (!email || !message) {
+          statusEl.textContent = "Please provide an email and a message.";
+          return;
+        }
+        if (!email.includes("@")) {
+          statusEl.textContent = "Enter a valid email address.";
+          return;
+        }
+        statusEl.textContent = "Sending support request...";
+        submitBtn.disabled = true;
+        try {
+          const payload = {
+            name,
+            email,
+            topic,
+            message,
+            page_url: window.location.href
+          };
+          const headers = {
+            "Content-Type": "application/json",
+            apikey: SUPABASE_ANON_KEY
+          };
+          if (hasSessionToken()) {
+            headers["Authorization"] = `Bearer ${session.access_token}`;
+          }
+          const res = await fetch(`${SUPABASE_URL}/functions/v1/support-ticket`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) {
+            let detail = "";
+            try {
+              const data = await res.json();
+              detail = data?.error || data?.message || "";
+            } catch {}
+            if (!detail) {
+              try { detail = await res.text(); } catch {}
+            }
+            statusEl.textContent = detail ? `Support request failed: ${detail}` : `Support request failed (HTTP ${res.status}).`;
+            return;
+          }
+          statusEl.textContent = "Ticket submitted. We’ll reply soon.";
+          nameInput.value = "";
+          emailInput.value = "";
+          messageInput.value = "";
+        } catch (error) {
+          statusEl.textContent = `Support request failed: ${(error && error.message) || "network error"}`;
+        } finally {
+          submitBtn.disabled = false;
+        }
+      }
+
+      submitBtn.addEventListener("click", submitTicket);
+
+      loadSession();
+      updateNavAuthState();
+
+      const revealTargets = document.querySelectorAll(".reveal, .reveal-up");
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in-view");
+          }
+        });
+      }, { threshold: 0.18, rootMargin: "0px 0px -10% 0px" });
+      revealTargets.forEach((el) => observer.observe(el));
     </script>
   </body>
 </html>

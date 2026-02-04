@@ -2,13 +2,222 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="refresh" content="0; url=/writerpro-site/#/pricing" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Redirecting...</title>
+    <title>Writer Pro — Pricing</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="page-enter">
+    <header class="hero">
+      <nav class="nav">
+        <a class="logo" href="index.html">WRITER PRO</a>
+        <div class="nav-actions">
+          <a class="btn btn-outline page-link" href="features.html">FEATURES</a>
+          <a class="btn btn-outline page-link" href="pricing.html">PRICING</a>
+          <a class="btn btn-outline page-link is-disabled" id="nav-dashboard" href="billing.html" aria-disabled="true">DASHBOARD</a>
+          <a class="btn btn-outline page-link" id="nav-auth" href="app.html">SIGN IN</a>
+          <a class="btn btn-primary page-link" href="download.html">DOWNLOAD</a>
+        </div>
+      </nav>
+
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <h1>PRICING</h1>
+          <p class="subtitle">Pick a plan and jump straight to your dashboard to complete purchase.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary btn-lg page-link" href="billing.html">OPEN DASHBOARD</a>
+            <a class="btn btn-outline btn-lg page-link" href="features.html">VIEW FEATURES</a>
+          </div>
+        </div>
+        <div class="hero-mock">
+          <div class="mock-card">
+            <div class="mock-bar">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+            <div class="mock-body">
+              <div class="mock-title">CREDIT VALUE</div>
+              <div class="mock-row"></div>
+              <div class="mock-row"></div>
+              <div class="mock-row"></div>
+              <div class="mock-cta">300 chars / credit</div>
+            </div>
+          </div>
+          <div class="glow"></div>
+        </div>
+      </div>
+    </header>
+
+    <section class="section reveal" id="pricing">
+      <h2>CREDITS & PRICING</h2>
+      <div class="pricing">
+        <div class="pricing-grid">
+          <button class="pricing-card pricing-pick reveal-up" data-pack="credits_65_monthly" type="button">
+            <div class="price">65 CREDITS</div>
+            <div class="price-sub">$4.99 CAD / month</div>
+            <div class="price-meta">Includes 5 bonus credits (60 + 5)</div>
+          </button>
+          <button class="pricing-card pricing-pick reveal-up" data-pack="credits_100" type="button">
+            <div class="price">100 CREDITS</div>
+            <div class="price-sub">$9.99 CAD one-time</div>
+            <div class="price-meta">Straight value (100)</div>
+          </button>
+          <button class="pricing-card pricing-pick reveal-up" data-pack="credits_180_monthly" type="button">
+            <div class="price">180 CREDITS</div>
+            <div class="price-sub">$11.99 CAD / month</div>
+            <div class="price-meta">Includes 20 bonus credits (160 + 20)</div>
+          </button>
+          <button class="pricing-card pricing-pick reveal-up" data-pack="credits_220" type="button">
+            <div class="price">220 CREDITS</div>
+            <div class="price-sub">$19.99 CAD one-time</div>
+            <div class="price-meta">Includes 20 bonus credits (200 + 20)</div>
+          </button>
+          <button class="pricing-card pricing-pick reveal-up" data-pack="credits_430_monthly" type="button">
+            <div class="price">430 CREDITS</div>
+            <div class="price-sub">$24.99 CAD / month</div>
+            <div class="price-meta">Includes 30 bonus credits (400 + 30)</div>
+          </button>
+        </div>
+        <div class="pricing-notes">
+          <p>1 credit = 300 characters. Study Pro uses 0.5 credits per flashcard.</p>
+          <ul>
+            <li>Credits used per essay length</li>
+            <li>Transparent cost before saving</li>
+            <li>Manage subscriptions anytime</li>
+            <li>AI generation (coming soon) requires a monthly plan</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal" id="faq">
+      <h2>QUESTIONS</h2>
+      <div class="cards grid-2">
+        <div class="card reveal-up">
+          <h3>HOW DO I BUY?</h3>
+          <p>Pick a plan and we route you to the dashboard to complete payment.</p>
+        </div>
+        <div class="card reveal-up">
+          <h3>CAN I CANCEL?</h3>
+          <p>Yes. Subscription management is available in the billing dashboard.</p>
+        </div>
+        <div class="card reveal-up">
+          <h3>WHERE DO CREDITS GO?</h3>
+          <p>Credits are attached to your account and sync between devices.</p>
+        </div>
+        <div class="card reveal-up">
+          <h3>WHAT ABOUT STUDY PRO?</h3>
+          <p>Every flashcard uses 0.5 credits, so you can track usage precisely.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-links">
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </footer>
+
     <script>
-      window.location.replace("/writerpro-site/#/pricing");
+      document.body.classList.add("page-enter");
+      const SUPABASE_URL = "https://vnzlaidwxgiaowhxtuvi.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuemxhaWR3eGdpYW93aHh0dXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MjcwNzksImV4cCI6MjA4NDQwMzA3OX0.AKiGX3xbgMKtUFYxHKEaAKwacFqmjPEsy56ofU1eDQQ";
+      const navAuthBtn = document.getElementById("nav-auth");
+      const navDashboardBtn = document.getElementById("nav-dashboard");
+      let session = null;
+
+      function hasSessionToken() {
+        return !!(session && session.access_token);
+      }
+
+      function loadSession() {
+        try {
+          const raw = localStorage.getItem("wp_session");
+          const fallback = sessionStorage.getItem("wp_session");
+          if (raw || fallback) session = JSON.parse(raw || fallback);
+        } catch {
+          session = null;
+        }
+      }
+
+      function updateNavAuthState() {
+        const signedIn = hasSessionToken();
+        navAuthBtn.textContent = signedIn ? "SIGN OUT" : "SIGN IN";
+        navAuthBtn.setAttribute("href", signedIn ? "#" : "app.html");
+        navDashboardBtn.classList.toggle("is-disabled", !signedIn);
+        navDashboardBtn.setAttribute("aria-disabled", signedIn ? "false" : "true");
+      }
+
+      async function remoteSignOut() {
+        if (!hasSessionToken()) return;
+        try {
+          await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${session.access_token}`,
+              "Content-Type": "application/json"
+            }
+          });
+        } catch {}
+      }
+
+      function navigateWithFade(url) {
+        document.body.classList.add("page-exit");
+        setTimeout(() => { window.location.href = url; }, 240);
+      }
+
+      document.querySelectorAll(".page-link").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          const href = link.getAttribute("href") || "";
+          if (link.id === "nav-auth" && hasSessionToken()) {
+            event.preventDefault();
+            remoteSignOut().finally(() => {
+              localStorage.removeItem("wp_session");
+              sessionStorage.removeItem("wp_session");
+              session = null;
+              updateNavAuthState();
+            });
+            return;
+          }
+          if (link.id === "nav-dashboard" && !hasSessionToken()) {
+            event.preventDefault();
+            navigateWithFade("app.html");
+            return;
+          }
+          if (href.startsWith("#")) return;
+          event.preventDefault();
+          navigateWithFade(href);
+        });
+      });
+
+      function goToBillingForPack(packId) {
+        const billingPath = `billing.html?pack_id=${encodeURIComponent(packId)}`;
+        const target = hasSessionToken()
+          ? billingPath
+          : `app.html?next=${encodeURIComponent(billingPath)}`;
+        navigateWithFade(target);
+      }
+
+      document.querySelectorAll(".pricing-pick").forEach((pick) => {
+        pick.addEventListener("click", () => {
+          goToBillingForPack(pick.dataset.pack || "");
+        });
+      });
+
+      loadSession();
+      updateNavAuthState();
+
+      const revealTargets = document.querySelectorAll(".reveal, .reveal-up");
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in-view");
+          }
+        });
+      }, { threshold: 0.18, rootMargin: "0px 0px -10% 0px" });
+      revealTargets.forEach((el) => observer.observe(el));
     </script>
   </body>
 </html>

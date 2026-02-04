@@ -2,13 +2,203 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="refresh" content="0; url=/writerpro-site/#/features" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Redirecting...</title>
+    <title>Writer Pro — Features</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="page-enter">
+    <header class="hero">
+      <nav class="nav">
+        <a class="logo" href="index.html">WRITER PRO</a>
+        <div class="nav-actions">
+          <a class="btn btn-outline page-link" href="features.html">FEATURES</a>
+          <a class="btn btn-outline page-link" href="pricing.html">PRICING</a>
+          <a class="btn btn-outline page-link is-disabled" id="nav-dashboard" href="billing.html" aria-disabled="true">DASHBOARD</a>
+          <a class="btn btn-outline page-link" id="nav-auth" href="app.html">SIGN IN</a>
+          <a class="btn btn-primary page-link" href="download.html">DOWNLOAD</a>
+        </div>
+      </nav>
+
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <h1>FEATURES</h1>
+          <p class="subtitle">Every tool you need to write, study, and deliver on time — in one place.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary btn-lg page-link" href="download.html">GET WRITER PRO</a>
+            <a class="btn btn-outline btn-lg page-link" href="pricing.html">VIEW PRICING</a>
+          </div>
+        </div>
+        <div class="hero-mock">
+          <div class="mock-card">
+            <div class="mock-bar">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+            <div class="mock-body">
+              <div class="mock-title">FEATURE OVERVIEW</div>
+              <div class="mock-row"></div>
+              <div class="mock-row"></div>
+              <div class="mock-row"></div>
+              <div class="mock-cta">Smart presets</div>
+            </div>
+          </div>
+          <div class="glow"></div>
+        </div>
+      </div>
+    </header>
+
+    <section class="section reveal" id="core">
+      <h2>CORE WORKFLOW</h2>
+      <div class="cards grid-2">
+        <div class="card reveal-up">
+          <h3>PROJECT DASHBOARD</h3>
+          <p>Manage every essay or study set with clean project cards, quick actions, and previews.</p>
+        </div>
+        <div class="card reveal-up">
+          <h3>HUMANIZED TYPING</h3>
+          <p>Natural rhythm, pauses, and backspaces that feel like a real person typing.</p>
+        </div>
+        <div class="card reveal-up">
+          <h3>SMART PRESETS</h3>
+          <p>Grade, review level, and speed presets that update live as you type.</p>
+        </div>
+        <div class="card reveal-up">
+          <h3>STUDY PRO</h3>
+          <p>Flashcards, quizzes, and rapid review with smart grading and clean session flow.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal" id="details">
+      <h2>DETAILS THAT MATTER</h2>
+      <div class="cards grid-2">
+        <div class="card reveal-up">
+          <h3>SMART BRIEF</h3>
+          <p>Live preview for essay type, time estimate, and credit cost before you save.</p>
+        </div>
+        <div class="card reveal-up">
+          <h3>PREDICTIVE GUARDRAILS</h3>
+          <p>Warnings for long sessions, low credits, and heavy review before you commit.</p>
+        </div>
+        <div class="card reveal-up">
+          <h3>UNDO DELETE</h3>
+          <p>Recover projects instantly when you delete by accident.</p>
+        </div>
+        <div class="card reveal-up">
+          <h3>AUTO-SAVE DRAFTS</h3>
+          <p>Pick up exactly where you left off with persistent draft recovery.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal" id="ai">
+      <h2>AI OUTLINE (COMING SOON)</h2>
+      <div class="cards grid-2">
+        <div class="card reveal-up">
+          <h3>UPLOAD + CONVERT</h3>
+          <p>Drop in an outline or notes and get a clean student-style draft.</p>
+        </div>
+        <div class="card reveal-up">
+          <h3>CONTROLLED OUTPUT</h3>
+          <p>Grade presets and structure settings keep the essay aligned with your standards.</p>
+        </div>
+      </div>
+      <p class="subtitle" style="margin-top: 18px;">Updated weekly — more features coming soon.</p>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-links">
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </footer>
+
     <script>
-      window.location.replace("/writerpro-site/#/features");
+      document.body.classList.add("page-enter");
+      const SUPABASE_URL = "https://vnzlaidwxgiaowhxtuvi.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuemxhaWR3eGdpYW93aHh0dXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MjcwNzksImV4cCI6MjA4NDQwMzA3OX0.AKiGX3xbgMKtUFYxHKEaAKwacFqmjPEsy56ofU1eDQQ";
+      const navAuthBtn = document.getElementById("nav-auth");
+      const navDashboardBtn = document.getElementById("nav-dashboard");
+      let session = null;
+
+      function hasSessionToken() {
+        return !!(session && session.access_token);
+      }
+
+      function loadSession() {
+        try {
+          const raw = localStorage.getItem("wp_session");
+          const fallback = sessionStorage.getItem("wp_session");
+          if (raw || fallback) session = JSON.parse(raw || fallback);
+        } catch {
+          session = null;
+        }
+      }
+
+      function updateNavAuthState() {
+        const signedIn = hasSessionToken();
+        navAuthBtn.textContent = signedIn ? "SIGN OUT" : "SIGN IN";
+        navAuthBtn.setAttribute("href", signedIn ? "#" : "app.html");
+        navDashboardBtn.classList.toggle("is-disabled", !signedIn);
+        navDashboardBtn.setAttribute("aria-disabled", signedIn ? "false" : "true");
+      }
+
+      async function remoteSignOut() {
+        if (!hasSessionToken()) return;
+        try {
+          await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${session.access_token}`,
+              "Content-Type": "application/json"
+            }
+          });
+        } catch {}
+      }
+
+      function navigateWithFade(url) {
+        document.body.classList.add("page-exit");
+        setTimeout(() => { window.location.href = url; }, 240);
+      }
+
+      document.querySelectorAll(".page-link").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          const href = link.getAttribute("href") || "";
+          if (link.id === "nav-auth" && hasSessionToken()) {
+            event.preventDefault();
+            remoteSignOut().finally(() => {
+              localStorage.removeItem("wp_session");
+              sessionStorage.removeItem("wp_session");
+              session = null;
+              updateNavAuthState();
+            });
+            return;
+          }
+          if (link.id === "nav-dashboard" && !hasSessionToken()) {
+            event.preventDefault();
+            navigateWithFade("app.html");
+            return;
+          }
+          if (href.startsWith("#")) return;
+          event.preventDefault();
+          navigateWithFade(href);
+        });
+      });
+
+      loadSession();
+      updateNavAuthState();
+
+      const revealTargets = document.querySelectorAll(".reveal, .reveal-up");
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in-view");
+          }
+        });
+      }, { threshold: 0.18, rootMargin: "0px 0px -10% 0px" });
+      revealTargets.forEach((el) => observer.observe(el));
     </script>
   </body>
 </html>

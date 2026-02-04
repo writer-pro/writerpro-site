@@ -2,13 +2,578 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="refresh" content="0; url=/writerpro-site/#/billing" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Redirecting...</title>
+    <title>Writer Pro — Billing</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="page-enter">
+    <header class="hero">
+      <nav class="nav">
+        <a class="logo" href="index.html">WRITER PRO</a>
+        <div class="nav-actions">
+          <a class="btn btn-outline page-link" href="features.html">FEATURES</a>
+          <a class="btn btn-outline page-link" href="pricing.html">PRICING</a>
+          <a class="btn btn-outline page-link" href="support.html">SUPPORT</a>
+          <a class="btn btn-outline page-link" href="download.html">DOWNLOAD</a>
+          <a class="btn btn-outline page-link" id="nav-auth" href="app.html">SIGN IN</a>
+        </div>
+      </nav>
+
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <h1>BILLING</h1>
+          <p class="subtitle">Manage credits and subscription details in one place.</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="section" id="billing">
+      <div class="billing-grid">
+        <div class="card span-2">
+          <div class="card-header">
+            <div>
+              <h3>ACCOUNT STATUS</h3>
+              <p id="auth-state">Checking session...</p>
+            </div>
+            <div class="credit-balance" id="credits">Balance: —</div>
+          </div>
+          <div class="cta-row" style="margin-top: 6px;">
+            <a class="btn btn-primary page-link" href="app.html" id="signin-link">Sign In</a>
+          </div>
+          <p class="notice" id="billing-status"></p>
+        </div>
+
+        <div class="card">
+          <h3>SUBSCRIPTIONS</h3>
+          <p class="subtle">Best value for steady weekly writing.</p>
+          <div class="pricing-grid account-pricing-grid">
+            <button class="btn btn-outline buy" data-pack="credits_65_monthly" type="button">Monthly 65 (60 + 5 bonus) • $4.99 CAD</button>
+            <button class="btn btn-outline buy" data-pack="credits_180_monthly" type="button">Monthly 180 (160 + 20 bonus) • $11.99 CAD</button>
+            <button class="btn btn-outline buy" data-pack="credits_430_monthly" type="button">Monthly 430 (400 + 30 bonus) • $24.99 CAD</button>
+          </div>
+          <div class="cta-row" style="margin-top: 12px;">
+            <button class="btn btn-outline" id="portal">Manage Subscription</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>ONE‑TIME CREDITS</h3>
+          <p class="subtle">One‑off top‑ups for larger essays or study sets.</p>
+          <div class="pricing-grid account-pricing-grid">
+            <button class="btn btn-outline buy" data-pack="credits_100" type="button">Buy 100 (no bonus) • $9.99 CAD</button>
+            <button class="btn btn-outline buy" data-pack="credits_220" type="button">Buy 220 (200 + 20 bonus) • $19.99 CAD</button>
+          </div>
+          <div class="cta-row" style="margin-top: 12px;">
+            <button class="btn btn-primary" id="refresh">Refresh Credits</button>
+          </div>
+        </div>
+
+        <div class="card span-2">
+          <h3>ACCOUNT DETAILS</h3>
+          <p class="subtle">Update your email and password securely.</p>
+          <div class="form-stack">
+            <input class="input" id="account-email" type="email" placeholder="Account email" />
+            <button class="btn btn-outline" id="toggle-password">Change Password</button>
+            <div class="form-stack is-hidden" id="password-panel">
+              <div class="two-col">
+                <input class="input" id="current-password" type="password" placeholder="Current password" autocomplete="current-password" />
+                <input class="input" id="new-password" type="password" placeholder="New password" autocomplete="new-password" />
+              </div>
+              <input class="input" id="confirm-password" type="password" placeholder="Confirm new password" autocomplete="new-password" />
+            </div>
+            <button class="btn btn-primary" id="settings-save">Save Account Changes</button>
+            <p class="notice" id="settings-status"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-links">
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </footer>
+
     <script>
-      window.location.replace("/writerpro-site/#/billing");
+      const SUPABASE_URL = "https://vnzlaidwxgiaowhxtuvi.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuemxhaWR3eGdpYW93aHh0dXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MjcwNzksImV4cCI6MjA4NDQwMzA3OX0.AKiGX3xbgMKtUFYxHKEaAKwacFqmjPEsy56ofU1eDQQ";
+      const FN_CREATE_CHECKOUT = "create-checkout-session";
+      const FN_PORTAL = "create-portal-session";
+
+      const authState = document.getElementById("auth-state");
+      const billingStatus = document.getElementById("billing-status");
+      const creditsEl = document.getElementById("credits");
+      const buyButtons = Array.from(document.querySelectorAll(".buy"));
+      const portalButton = document.getElementById("portal");
+      const refreshButton = document.getElementById("refresh");
+      const navAuthBtn = document.getElementById("nav-auth");
+      const signinLink = document.getElementById("signin-link");
+      const accountEmail = document.getElementById("account-email");
+      const currentPassword = document.getElementById("current-password");
+      const newPassword = document.getElementById("new-password");
+      const confirmPassword = document.getElementById("confirm-password");
+      const togglePassword = document.getElementById("toggle-password");
+      const passwordPanel = document.getElementById("password-panel");
+      const settingsSave = document.getElementById("settings-save");
+      const settingsStatus = document.getElementById("settings-status");
+      let session = null;
+      function hasSessionToken() {
+        return !!(session && session.access_token);
+      }
+      function ingestSessionFromHash() {
+        const hash = window.location.hash ? window.location.hash.substring(1) : "";
+        if (!hash) return;
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+        if (!accessToken) return;
+        const expiresAt = parseInt(params.get("expires_at") || "0", 10) || undefined;
+        const tokenType = params.get("token_type") || "bearer";
+        storeSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_at: expiresAt,
+          token_type: tokenType
+        });
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+      function storeSession(next) {
+        session = next;
+        try {
+          if (next) {
+            const serialized = JSON.stringify(next);
+            localStorage.setItem("wp_session", serialized);
+            sessionStorage.setItem("wp_session", serialized);
+            window.name = `wp_session:${serialized}`;
+          } else {
+            localStorage.removeItem("wp_session");
+            sessionStorage.removeItem("wp_session");
+            if (window.name && window.name.startsWith("wp_session:")) {
+              window.name = "";
+            }
+          }
+        } catch {}
+      }
+      const params = new URLSearchParams(window.location.search);
+      const requestedPackId = params.get("pack_id");
+
+      function loadSession() {
+        try {
+          const raw = localStorage.getItem("wp_session");
+          const fallback = sessionStorage.getItem("wp_session");
+          if (raw || fallback) {
+            session = JSON.parse(raw || fallback);
+            return;
+          }
+          if (window.name && window.name.startsWith("wp_session:")) {
+            const serialized = window.name.substring("wp_session:".length);
+            session = JSON.parse(serialized);
+          }
+        } catch {
+          session = null;
+        }
+      }
+
+      function navigateWithFade(url) {
+        document.body.classList.add("page-exit");
+        setTimeout(() => { window.location.href = url; }, 240);
+      }
+
+      document.querySelectorAll(".page-link").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          if (link.id === "nav-auth" && hasSessionToken()) {
+            event.preventDefault();
+            signOut();
+            return;
+          }
+          const href = link.getAttribute("href") || "";
+          if (href.startsWith("#")) return;
+          event.preventDefault();
+          navigateWithFade(href);
+        });
+      });
+
+      function setBillingLocked(locked) {
+        portalButton.disabled = locked;
+        refreshButton.disabled = locked;
+      }
+
+      function markRequestedPack() {
+        const selectedPack = requestedPackId || "";
+        if (!selectedPack) return;
+        let found = false;
+        buyButtons.forEach((btn) => {
+          const selected = btn.dataset.pack === selectedPack;
+          btn.classList.toggle("is-selected", selected);
+          if (selected) found = true;
+        });
+        if (found) {
+          billingStatus.textContent = "Selected plan ready. Click it to continue checkout.";
+        }
+      }
+
+      function updateSessionUI() {
+        const signedIn = hasSessionToken();
+        navAuthBtn.textContent = signedIn ? "SIGN OUT" : "SIGN IN";
+        navAuthBtn.setAttribute("href", signedIn ? "#" : "app.html");
+        signinLink.style.display = signedIn ? "none" : "inline-flex";
+      }
+
+      function isSessionNearExpiry() {
+        if (!session || !session.expires_at) return false;
+        const now = Math.floor(Date.now() / 1000);
+        return now >= (session.expires_at - 45);
+      }
+
+      async function refreshSession() {
+        if (!session || !session.refresh_token) return false;
+        try {
+          const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({ refresh_token: session.refresh_token })
+          });
+          if (!res.ok) return false;
+          const next = await res.json();
+          if (!next || !next.access_token) return false;
+          storeSession(next);
+          updateSessionUI();
+          return true;
+        } catch {
+          return false;
+        }
+      }
+
+      async function ensureFreshSession() {
+        if (!hasSessionToken()) return false;
+        if (isSessionNearExpiry()) {
+          return await refreshSession();
+        }
+        return true;
+      }
+
+      async function validateSession() {
+        if (!hasSessionToken()) return false;
+        try {
+          const res = await supabaseRequest("/auth/v1/user", { method: "GET" });
+          if (res && res.ok) return true;
+          if (res && res.status === 401) {
+            const refreshed = await refreshSession();
+            if (!refreshed) return false;
+            const retry = await supabaseRequest("/auth/v1/user", { method: "GET" }, false);
+            return !!(retry && retry.ok);
+          }
+          return false;
+        } catch {
+          return false;
+        }
+      }
+
+      function loadSettings() {
+        if (settingsStatus) settingsStatus.textContent = "";
+      }
+
+      async function saveSettings() {
+        if (!hasSessionToken()) {
+          settingsStatus.textContent = "Please sign in to update account details.";
+          return;
+        }
+        const emailValue = accountEmail.value.trim().toLowerCase();
+        const currentValue = currentPassword.value;
+        const newValue = newPassword.value;
+        const confirmValue = confirmPassword.value;
+        if (!emailValue || !emailValue.includes("@")) {
+          settingsStatus.textContent = "Enter a valid email address.";
+          return;
+        }
+        if ((newValue || confirmValue || currentValue) && newValue !== confirmValue) {
+          settingsStatus.textContent = "New password confirmation does not match.";
+          return;
+        }
+        if ((newValue || confirmValue || currentValue) && passwordPanel.classList.contains("is-hidden")) {
+          passwordPanel.classList.remove("is-hidden");
+        }
+        settingsStatus.textContent = "Saving account changes...";
+        let updated = false;
+        try {
+          const userRes = await supabaseRequest("/auth/v1/user", { method: "GET" });
+          const user = userRes.ok ? await userRes.json() : null;
+          const currentEmail = user?.email || "";
+          if (emailValue && currentEmail && emailValue !== currentEmail) {
+            const emailRes = await supabaseRequest("/auth/v1/user", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: emailValue })
+            });
+            if (emailRes.ok) {
+              settingsStatus.textContent = "Email update requested. Check your inbox to confirm.";
+              updated = true;
+            } else {
+              settingsStatus.textContent = "Email update failed. Please try again.";
+            }
+          }
+          if (currentValue && newValue) {
+            const verifyRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY },
+              body: JSON.stringify({ email: emailValue, password: currentValue })
+            });
+            if (!verifyRes.ok) {
+              settingsStatus.textContent = "Current password is incorrect.";
+              return;
+            }
+            const nextSession = await verifyRes.json();
+            if (nextSession && nextSession.access_token) {
+              storeSession(nextSession);
+            }
+            const passRes = await supabaseRequest("/auth/v1/user", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ password: newValue })
+            });
+            if (passRes.ok) {
+              settingsStatus.textContent = "Password updated.";
+              updated = true;
+              currentPassword.value = "";
+              newPassword.value = "";
+              confirmPassword.value = "";
+              passwordPanel.classList.add("is-hidden");
+            } else {
+              settingsStatus.textContent = "Password update failed.";
+            }
+          }
+          if (!updated) {
+            settingsStatus.textContent = "No changes detected.";
+          }
+        } catch (error) {
+          settingsStatus.textContent = `Save failed: ${(error && error.message) || "network error"}`;
+        }
+      }
+
+      async function startCheckout(packId) {
+        ingestSessionFromHash();
+        if (!hasSessionToken()) {
+          billingStatus.textContent = "Sign in required before checkout.";
+          const targetBilling = packId ? `billing.html?pack_id=${encodeURIComponent(packId)}` : "billing.html";
+          navigateWithFade(`app.html?next=${encodeURIComponent(targetBilling)}`);
+          return;
+        }
+        const fresh = await ensureFreshSession();
+        if (!fresh) {
+          billingStatus.textContent = "Session expired. Please sign in again.";
+          setBillingLocked(true);
+          navigateWithFade("app.html?signed_out=1");
+          return;
+        }
+        buyButtons.forEach((btn) => btn.classList.toggle("is-selected", btn.dataset.pack === packId));
+        billingStatus.textContent = "Opening checkout...";
+        try {
+          const res = await supabaseRequest(`/functions/v1/${FN_CREATE_CHECKOUT}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              pack_id: packId,
+              access_token: session && session.access_token ? session.access_token : ""
+            })
+          });
+          if (!res.ok) {
+            let detail = "";
+            try {
+              const payload = await res.json();
+              detail = (payload && (payload.error || payload.message)) || "";
+            } catch {}
+            if (!detail) {
+              try {
+                detail = (await res.text()) || "";
+              } catch {}
+            }
+            if (res.status === 401) {
+              billingStatus.textContent = "Session expired. Redirecting to sign in...";
+              setBillingLocked(true);
+              const targetBilling = packId ? `billing.html?pack_id=${encodeURIComponent(packId)}` : "billing.html";
+              navigateWithFade(`app.html?next=${encodeURIComponent(targetBilling)}&signed_out=1`);
+              return;
+            }
+            if (res.status === 404) {
+              billingStatus.textContent = "Checkout service not found. Confirm Edge Function deployment.";
+              return;
+            }
+            billingStatus.textContent = detail ? `Checkout failed: ${detail}` : `Checkout failed (HTTP ${res.status}).`;
+            return;
+          }
+          const payload = await res.json();
+          if (!payload || !payload.url) {
+            billingStatus.textContent = "Checkout failed: missing checkout URL.";
+            return;
+          }
+          window.location.href = payload.url;
+        } catch (error) {
+          billingStatus.textContent = `Checkout failed: ${(error && error.message) || "network error"}`;
+        }
+      }
+
+      async function supabaseRequest(path, options, retry = true) {
+        const headers = options.headers || {};
+        headers["apikey"] = SUPABASE_ANON_KEY;
+        if (hasSessionToken()) headers["Authorization"] = `Bearer ${session.access_token}`;
+        const response = await fetch(`${SUPABASE_URL}${path}`, { ...options, headers });
+        if (response.status === 401 && retry && session && session.refresh_token) {
+          const refreshed = await refreshSession();
+          if (refreshed) {
+            return supabaseRequest(path, options, false);
+          }
+        }
+        return response;
+      }
+
+      async function remoteSignOut() {
+        if (!hasSessionToken()) return;
+        try {
+          await supabaseRequest("/auth/v1/logout", { method: "POST", headers: { "Content-Type": "application/json" } });
+        } catch {}
+      }
+
+      async function refreshCredits() {
+        if (!hasSessionToken()) return;
+        await ensureFreshSession();
+        billingStatus.textContent = "Refreshing...";
+        const userRes = await supabaseRequest("/auth/v1/user", { method: "GET" });
+        if (!userRes.ok) {
+          billingStatus.textContent = "Failed to load profile.";
+          return;
+        }
+        const user = await userRes.json();
+        const email = user ? user.email : "";
+        const res = await supabaseRequest(`/rest/v1/profiles?select=credits,email,is_admin&email=eq.${encodeURIComponent(email)}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" }
+        });
+        if (!res.ok) {
+          billingStatus.textContent = "Failed to load credits.";
+          return;
+        }
+        const data = await res.json();
+        const nextCredits = (data && data[0] && typeof data[0].credits === "number") ? data[0].credits : 0;
+        creditsEl.textContent = `Balance: ${nextCredits}`;
+        billingStatus.textContent = "";
+      }
+
+      async function openPortal() {
+        if (!hasSessionToken()) {
+          billingStatus.textContent = "Sign in required before opening portal.";
+          navigateWithFade("app.html?next=billing.html");
+          return;
+        }
+        const fresh = await ensureFreshSession();
+        if (!fresh) {
+          billingStatus.textContent = "Session expired. Please sign in again.";
+          setBillingLocked(true);
+          navigateWithFade("app.html?signed_out=1");
+          return;
+        }
+        billingStatus.textContent = "Opening portal...";
+        try {
+          const res = await supabaseRequest(`/functions/v1/${FN_PORTAL}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              access_token: session && session.access_token ? session.access_token : ""
+            })
+          });
+          if (!res.ok) {
+            let detail = "";
+            try {
+              const payload = await res.json();
+              detail = (payload && (payload.error || payload.message)) || "";
+            } catch {}
+            if (!detail) {
+              try {
+                detail = (await res.text()) || "";
+              } catch {}
+            }
+            billingStatus.textContent = detail ? `Portal failed: ${detail}` : `Portal failed (HTTP ${res.status}).`;
+            if (res.status === 401) {
+              billingStatus.textContent = "Session expired. Redirecting to sign in...";
+              setBillingLocked(true);
+              navigateWithFade("app.html?next=billing.html&signed_out=1");
+            }
+            return;
+          }
+          const payload = await res.json();
+          if (!payload || !payload.url) {
+            billingStatus.textContent = "Portal failed: missing portal URL.";
+            return;
+          }
+          window.location.href = payload.url;
+        } catch (error) {
+          billingStatus.textContent = `Portal failed: ${(error && error.message) || "network error"}`;
+        }
+      }
+
+      async function signOut() {
+        await remoteSignOut();
+        storeSession(null);
+        setBillingLocked(true);
+        updateSessionUI();
+        authState.textContent = "Signed out. Please sign in to continue.";
+        creditsEl.textContent = "Balance: —";
+        navigateWithFade("app.html?signed_out=1");
+      }
+
+      buyButtons.forEach((btn) => btn.addEventListener("click", () => startCheckout(btn.dataset.pack)));
+      portalButton.addEventListener("click", openPortal);
+      refreshButton.addEventListener("click", refreshCredits);
+      if (settingsSave) settingsSave.addEventListener("click", saveSettings);
+      if (togglePassword && passwordPanel) {
+        togglePassword.addEventListener("click", () => {
+          passwordPanel.classList.toggle("is-hidden");
+          togglePassword.textContent = passwordPanel.classList.contains("is-hidden")
+            ? "Change Password"
+            : "Hide Password Fields";
+        });
+      }
+
+      ingestSessionFromHash();
+      loadSession();
+      loadSettings();
+      updateSessionUI();
+      (async function initBilling() {
+        if (!hasSessionToken()) {
+          setBillingLocked(true);
+          authState.textContent = "Not signed in. Sign in to continue.";
+          markRequestedPack();
+          billingStatus.textContent = "Sign in to manage credits.";
+          return;
+        }
+
+        const valid = await validateSession();
+        if (!valid) {
+          setBillingLocked(true);
+          authState.textContent = "Session expired. Please sign in again.";
+          billingStatus.textContent = "Session expired. Please sign in again.";
+          return;
+        }
+
+        setBillingLocked(false);
+        authState.textContent = "Signed in.";
+        const userRes = await supabaseRequest("/auth/v1/user", { method: "GET" });
+        if (userRes.ok) {
+          const user = await userRes.json();
+          if (accountEmail && user?.email) accountEmail.value = user.email;
+        }
+        markRequestedPack();
+        await refreshCredits();
+
+        const checkoutParams = new URLSearchParams(window.location.search);
+        if (checkoutParams.get("checkout") === "success") {
+          billingStatus.textContent = "Purchase complete. Refreshing credits...";
+          await refreshCredits();
+        }
+      })();
     </script>
   </body>
 </html>

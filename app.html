@@ -2,13 +2,246 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="refresh" content="0; url=/writerpro-site/#/signin" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Redirecting...</title>
+    <title>Writer Pro — Sign In</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="page-enter">
+    <header class="hero">
+      <nav class="nav">
+        <a class="logo" href="index.html">WRITER PRO</a>
+        <div class="nav-actions">
+          <a class="btn btn-outline page-link" href="index.html">HOME</a>
+          <a class="btn btn-outline page-link" href="features.html">FEATURES</a>
+          <a class="btn btn-outline page-link" href="pricing.html">PRICING</a>
+          <a class="btn btn-outline page-link" href="support.html">SUPPORT</a>
+          <a class="btn btn-outline page-link" href="download.html">DOWNLOAD</a>
+        </div>
+      </nav>
+
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <h1>SIGN IN</h1>
+          <p class="subtitle">Log in first, then manage credits on the billing page.</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="section" id="account">
+      <div class="account-grid account-grid-single">
+        <div class="card">
+          <h3>ACCOUNT ACCESS</h3>
+          <p>Use the same email you use on the Mac app.</p>
+          <div class="form-stack">
+            <input class="input" id="email" type="email" placeholder="Email" autocomplete="email" />
+            <input class="input" id="password" type="password" placeholder="Password" autocomplete="current-password" />
+            <button class="btn btn-primary" id="login">
+              <span>Sign In</span>
+              <span class="mini-spinner" id="auth-spinner" aria-hidden="true"></span>
+            </button>
+            <button class="btn btn-outline" id="signup">Create Account</button>
+            <p class="notice" id="auth-status"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-links">
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </footer>
+
     <script>
-      window.location.replace("/writerpro-site/#/signin");
+      const SUPABASE_URL = "https://vnzlaidwxgiaowhxtuvi.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuemxhaWR3eGdpYW93aHh0dXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MjcwNzksImV4cCI6MjA4NDQwMzA3OX0.AKiGX3xbgMKtUFYxHKEaAKwacFqmjPEsy56ofU1eDQQ";
+
+      const emailEl = document.getElementById("email");
+      const passwordEl = document.getElementById("password");
+      const authStatus = document.getElementById("auth-status");
+      const authSpinner = document.getElementById("auth-spinner");
+      const loginBtn = document.getElementById("login");
+      const signupBtn = document.getElementById("signup");
+
+      let session = null;
+      function hasSessionToken() {
+        return !!(session && session.access_token);
+      }
+
+      function storeSession(next) {
+        session = next;
+        try {
+          if (next) {
+            const serialized = JSON.stringify(next);
+            localStorage.setItem("wp_session", serialized);
+            sessionStorage.setItem("wp_session", serialized);
+            window.name = `wp_session:${serialized}`;
+          } else {
+            localStorage.removeItem("wp_session");
+            sessionStorage.removeItem("wp_session");
+            if (window.name && window.name.startsWith("wp_session:")) {
+              window.name = "";
+            }
+          }
+        } catch {}
+      }
+
+      function loadSession() {
+        try {
+          const raw = localStorage.getItem("wp_session");
+          const fallback = sessionStorage.getItem("wp_session");
+          if (raw || fallback) session = JSON.parse(raw || fallback);
+        } catch {
+          session = null;
+        }
+      }
+
+      function updateSessionUI() {
+        // Sign-in page should redirect if already signed in.
+      }
+
+      async function supabaseRequest(path, options) {
+        const headers = options.headers || {};
+        headers["apikey"] = SUPABASE_ANON_KEY;
+        if (hasSessionToken()) headers["Authorization"] = `Bearer ${session.access_token}`;
+        return fetch(`${SUPABASE_URL}${path}`, { ...options, headers });
+      }
+
+      function setAuthLoading(isLoading) {
+        authSpinner.classList.toggle("active", isLoading);
+        loginBtn.classList.toggle("is-loading", isLoading);
+        loginBtn.disabled = isLoading;
+        signupBtn.disabled = isLoading;
+        const loginLabel = loginBtn.querySelector("span");
+        if (isLoading) {
+          if (loginLabel) loginLabel.textContent = "Signing In...";
+        } else {
+          if (loginLabel) loginLabel.textContent = "Sign In";
+        }
+      }
+
+      function goToBilling() {
+        const params = new URLSearchParams(window.location.search);
+        const next = params.get("next");
+        const baseTarget = next && next.trim().length > 0 ? next : `billing.html?v=${Date.now()}`;
+        const tokenHash = buildTokenHash();
+        const target = tokenHash ? appendHash(baseTarget, tokenHash) : baseTarget;
+        navigateWithFade(target);
+      }
+
+      function buildTokenHash() {
+        if (!hasSessionToken()) return "";
+        const parts = [];
+        if (session.access_token) parts.push(`access_token=${encodeURIComponent(session.access_token)}`);
+        if (session.refresh_token) parts.push(`refresh_token=${encodeURIComponent(session.refresh_token)}`);
+        if (session.expires_at) parts.push(`expires_at=${encodeURIComponent(session.expires_at)}`);
+        if (session.token_type) parts.push(`token_type=${encodeURIComponent(session.token_type)}`);
+        return parts.join("&");
+      }
+
+      function appendHash(url, hash) {
+        if (!hash) return url;
+        if (url.indexOf("#") >= 0) {
+          return `${url}&${hash}`;
+        }
+        return `${url}#${hash}`;
+      }
+
+      async function signIn() {
+        const email = emailEl.value.trim();
+        const password = passwordEl.value;
+        if (!email || !password) {
+          authStatus.textContent = "Enter email and password.";
+          return;
+        }
+        if (!email.includes("@")) {
+          authStatus.textContent = "Enter a valid email address.";
+          return;
+        }
+        setAuthLoading(true);
+        authStatus.textContent = "Signing in...";
+        try {
+          const res = await supabaseRequest("/auth/v1/token?grant_type=password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+          });
+          if (!res.ok) {
+            let detail = "";
+            try {
+              const payload = await res.json();
+              detail = (payload && (payload.error_description || payload.msg || payload.error)) || "";
+            } catch {}
+            authStatus.textContent = detail ? `Sign in failed: ${detail}` : "Sign in failed.";
+            return;
+          }
+          storeSession(await res.json());
+          if (!hasSessionToken()) {
+            authStatus.textContent = "Sign in failed: invalid session response.";
+            return;
+          }
+          updateSessionUI();
+          authStatus.textContent = "Signed in. Redirecting to dashboard...";
+          goToBilling();
+        } catch (error) {
+          authStatus.textContent = `Sign in failed: ${(error && error.message) || "network error"}`;
+        } finally {
+          setAuthLoading(false);
+        }
+      }
+
+      async function signUp() {
+        setAuthLoading(true);
+        authStatus.textContent = "Creating account...";
+        try {
+          const res = await supabaseRequest("/auth/v1/signup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: emailEl.value, password: passwordEl.value })
+          });
+          authStatus.textContent = res.ok ? "Account created. Check your email." : "Sign up failed.";
+        } finally {
+          setAuthLoading(false);
+        }
+      }
+
+
+      function navigateWithFade(url) {
+        document.body.classList.add("page-exit");
+        setTimeout(() => { window.location.href = url; }, 240);
+      }
+
+      document.querySelectorAll(".page-link").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          const href = link.getAttribute("href") || "";
+          if (href.startsWith("#")) return;
+          event.preventDefault();
+          navigateWithFade(href);
+        });
+      });
+
+      loginBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        signIn();
+      });
+      signupBtn.addEventListener("click", signUp);
+      passwordEl.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") signIn();
+      });
+      emailEl.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") signIn();
+      });
+
+      loadSession();
+      updateSessionUI();
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("signed_out") === "1") {
+        authStatus.textContent = "Signed out. Please sign in again.";
+      }
+      if (hasSessionToken()) {
+        goToBilling();
+      }
     </script>
   </body>
 </html>
