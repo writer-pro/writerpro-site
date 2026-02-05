@@ -77,6 +77,10 @@
               <strong id="admin-user-tier">—</strong>
             </div>
             <div class="admin-kpi">
+              <span class="label">Admin</span>
+              <strong id="admin-user-admin">—</strong>
+            </div>
+            <div class="admin-kpi">
               <span class="label">Created</span>
               <strong id="admin-user-created">—</strong>
             </div>
@@ -101,6 +105,10 @@
               <option value="study">Study (180)</option>
               <option value="test">Test (430)</option>
             </select>
+            <label class="input admin-toggle">
+              <span>Admin Access</span>
+              <input type="checkbox" id="admin-is-admin" />
+            </label>
             <div class="two-col">
               <input class="input" id="admin-password" type="password" placeholder="Set new password (optional)" />
               <input class="input" id="admin-password-confirm" type="password" placeholder="Confirm new password" />
@@ -132,6 +140,7 @@
       const userIdEl = document.getElementById("admin-user-id");
       const userCreditsEl = document.getElementById("admin-user-credits");
       const userTierEl = document.getElementById("admin-user-tier");
+      const userAdminEl = document.getElementById("admin-user-admin");
       const userCreatedEl = document.getElementById("admin-user-created");
       const userLastEl = document.getElementById("admin-user-last");
 
@@ -140,6 +149,7 @@
       const addEl = document.getElementById("admin-credits-add");
       const setEl = document.getElementById("admin-credits-set");
       const tierEl = document.getElementById("admin-tier");
+      const adminToggleEl = document.getElementById("admin-is-admin");
       const passEl = document.getElementById("admin-password");
       const passConfirmEl = document.getElementById("admin-password-confirm");
       const submitEl = document.getElementById("admin-submit");
@@ -214,6 +224,7 @@
         userIdEl.textContent = data.id ? `ID: ${data.id}` : "No user loaded";
         userCreditsEl.textContent = typeof data.credits === "number" ? data.credits.toLocaleString() : "—";
         userTierEl.textContent = data.subscription_tier || "—";
+        userAdminEl.textContent = data.is_admin ? "Yes" : "No";
         userCreatedEl.textContent = formatDate(data.created_at);
         userLastEl.textContent = formatDate(data.last_sign_in_at);
         emailEl.value = data.email || "";
@@ -221,6 +232,7 @@
         addEl.value = "";
         setEl.value = "";
         tierEl.value = "";
+        adminToggleEl.checked = !!data.is_admin;
         passEl.value = "";
         passConfirmEl.value = "";
       }
@@ -262,6 +274,7 @@
         if (!Number.isNaN(add)) payload.credits_add = add;
         if (!Number.isNaN(set)) payload.credits_set = set;
         if (tierEl.value) payload.subscription_tier = tierEl.value;
+        payload.is_admin_set = !!adminToggleEl.checked;
         const emailSet = (emailSetEl.value || "").trim().toLowerCase();
         if (emailSet) payload.email_set = emailSet;
         const pass = (passEl.value || "").trim();
@@ -297,6 +310,7 @@
         addEl.value = "";
         setEl.value = "";
         tierEl.value = "";
+        adminToggleEl.checked = false;
         passEl.value = "";
         passConfirmEl.value = "";
         statusEl.textContent = "";
