@@ -104,6 +104,15 @@
       </div>
     </section>
 
+    <script>
+      try {
+        const raw = localStorage.getItem("wp_session");
+        if (!raw) {
+          window.location.href = "app.html?next=billing.html";
+        }
+      } catch {}
+    </script>
+
     <div class="offerwall-modal hidden" id="offerwall-modal" role="dialog" aria-modal="true">
       <div class="offerwall-frame">
         <button class="btn btn-outline offerwall-close" id="offerwall-close" type="button">CLOSE</button>
