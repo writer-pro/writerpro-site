@@ -1362,6 +1362,10 @@ body.reduced-motion * {
   color: #f8fbff;
 }
 
+.onboarding-referral {
+  margin-top: 6px;
+}
+
 @media (max-width: 720px) {
   .admin-panel-head {
     align-items: flex-start;

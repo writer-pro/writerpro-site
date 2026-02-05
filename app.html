@@ -42,7 +42,6 @@
           <div class="form-stack">
             <input class="input" id="email" type="email" placeholder="Email" autocomplete="email" />
             <input class="input" id="password" type="password" placeholder="Password" autocomplete="current-password" />
-            <input class="input" id="referral" type="text" placeholder="Referral code (optional)" />
             <button class="btn btn-primary" id="login">
               <span>Sign In</span>
               <span class="mini-spinner" id="auth-spinner" aria-hidden="true"></span>
@@ -159,6 +158,12 @@
             <button class="btn btn-primary" id="onb-submit" type="submit">Finish Setup</button>
             <span class="notice" id="onb-status"></span>
           </div>
+          <div class="onboarding-referral">
+            <label class="input">
+              <span>Referral code (optional)</span>
+              <input id="onb-referral" type="text" placeholder="Enter code if you have one" />
+            </label>
+          </div>
         </form>
       </div>
     </div>
@@ -176,7 +181,6 @@
 
       const emailEl = document.getElementById("email");
       const passwordEl = document.getElementById("password");
-      const referralEl = document.getElementById("referral");
       const authStatus = document.getElementById("auth-status");
       const authSpinner = document.getElementById("auth-spinner");
       const loginBtn = document.getElementById("login");
@@ -281,8 +285,6 @@
           authStatus.textContent = "Enter a valid email address.";
           return;
         }
-        const referralCode = referralEl.value.trim();
-        if (referralCode) localStorage.setItem("wp_referral_pending", referralCode);
         setAuthLoading(true);
         authStatus.textContent = "Signing in...";
         try {
@@ -319,8 +321,6 @@
         setAuthLoading(true);
         authStatus.textContent = "Creating account...";
         try {
-          const referralCode = referralEl.value.trim();
-          if (referralCode) localStorage.setItem("wp_referral_pending", referralCode);
           const res = await supabaseRequest("/auth/v1/signup", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -394,6 +394,8 @@
         event.preventDefault();
         onboardingStatus.textContent = "Saving...";
         onboardingSubmit.disabled = true;
+        const referralInput = (document.getElementById("onb-referral").value || "").trim();
+        if (referralInput) localStorage.setItem("wp_referral_pending", referralInput);
 
         const payload = {
           role: document.getElementById("onb-role").value,
@@ -463,7 +465,6 @@
       updateSessionUI();
       const refParam = new URLSearchParams(window.location.search).get("ref");
       if (refParam) {
-        referralEl.value = refParam;
         localStorage.setItem("wp_referral_pending", refParam);
       }
       const params = new URLSearchParams(window.location.search);
