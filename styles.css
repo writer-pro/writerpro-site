@@ -157,6 +157,21 @@ a {
   margin-bottom: 12px;
 }
 
+.moving-gradient {
+  background: linear-gradient(120deg, #7bb2ff, #4f8bff, #a6ccff, #4f8bff);
+  background-size: 220% 220%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: moving-gradient 6.5s ease-in-out infinite;
+}
+
+@keyframes moving-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .hero-copy,
 .hero-mock {
   animation: rise-in 0.6s ease both;
