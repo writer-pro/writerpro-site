@@ -1242,6 +1242,39 @@ body.reduced-motion * {
   color: var(--text-primary);
 }
 
+.admin-log-list {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.admin-log {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.6);
+  font-size: 13px;
+}
+
+.admin-log strong {
+  display: block;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.admin-log span {
+  color: var(--text-subtle);
+}
+
+.admin-log time {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
 .onboarding-overlay {
   position: fixed;
   inset: 0;
