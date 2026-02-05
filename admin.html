@@ -75,25 +75,18 @@
       function hasSessionToken() {
         return !!(session && session.access_token);
       }
-      async function getProfile() {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${session.user_id}&select=id,is_admin`, {
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${session.access_token}`
-          }
-        });
-        if (!res.ok) return null;
-        const data = await res.json();
-        return data && data[0] ? data[0] : null;
-      }
-
       async function ensureAdmin() {
         if (!hasSessionToken()) {
           window.location.href = "app.html?next=admin.html";
           return false;
         }
-        const profile = await getProfile();
-        if (!profile || !profile.is_admin) {
+        const res = await fetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-check", {
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${session.access_token}`
+          }
+        });
+        if (!res.ok) {
           statusEl.textContent = "Access denied. Admin only.";
           submitEl.disabled = true;
           return false;
