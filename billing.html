@@ -54,9 +54,9 @@
           <h3>EARN CREDITS</h3>
           <p class="subtle">Complete sponsored offers to earn credits instantly.</p>
           <div class="cta-row" style="margin-top: 12px;">
-            <button class="btn btn-outline" id="open-offerwall" type="button">OPEN OFFERWALL</button>
+            <button class="btn btn-outline" id="open-offerwall" type="button" disabled>OFFERS COMING SOON</button>
           </div>
-          <p class="notice" id="offerwall-status"></p>
+          <p class="notice" id="offerwall-status">Offers are not available yet.</p>
         </div>
 
         <div class="card">
@@ -583,7 +583,6 @@
       }
 
       buyButtons.forEach((btn) => btn.addEventListener("click", () => startCheckout(btn.dataset.pack)));
-      if (offerwallButton) offerwallButton.addEventListener("click", openOfferwall);
       if (offerwallClose) offerwallClose.addEventListener("click", closeOfferwall);
       portalButton.addEventListener("click", openPortal);
       refreshButton.addEventListener("click", refreshCredits);
