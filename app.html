@@ -352,7 +352,12 @@
             authStatus.textContent = detail ? `Sign in failed: ${detail}` : "Sign in failed.";
             return;
           }
-          storeSession(await res.json());
+          const payload = await res.json();
+          if (!payload || !payload.access_token) {
+            authStatus.textContent = "Sign in failed: invalid session response.";
+            return;
+          }
+          storeSession(payload);
           if (!hasSessionToken()) {
             authStatus.textContent = "Sign in failed: invalid session response.";
             return;
@@ -405,20 +410,21 @@
               data: { first_name: firstName, last_name: lastName }
             })
           });
+          let payload = null;
+          try { payload = await res.json(); } catch {}
           if (!res.ok) {
-            authStatus.textContent = "Sign up failed.";
+            const detail = payload && (payload.error_description || payload.msg || payload.error);
+            authStatus.textContent = detail ? `Sign up failed: ${detail}` : "Sign up failed.";
             return;
           }
           localStorage.setItem("wp_new_signup", "1");
-          let payload = null;
-          try { payload = await res.json(); } catch {}
           if (payload && payload.access_token) {
             storeSession(payload);
             authStatus.textContent = "Account created. Finishing setup...";
             await syncProfileFromAuth();
             await afterAuthSuccess();
           } else {
-            authStatus.textContent = "Account created. Check your email, then sign in.";
+            authStatus.textContent = "Account created. Check your email to confirm, then sign in.";
           }
         } finally {
           setAuthLoading(false);
