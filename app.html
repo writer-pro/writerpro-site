@@ -281,6 +281,8 @@
           authStatus.textContent = "Enter a valid email address.";
           return;
         }
+        const referralCode = referralEl.value.trim();
+        if (referralCode) localStorage.setItem("wp_referral_pending", referralCode);
         setAuthLoading(true);
         authStatus.textContent = "Signing in...";
         try {
