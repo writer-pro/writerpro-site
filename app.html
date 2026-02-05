@@ -651,12 +651,7 @@
           goToBilling();
           return;
         }
-        if (newSignup) {
-          toggleOnboarding(true);
-        } else {
-          authStatus.textContent = "Signed in. Redirecting to dashboard...";
-          goToBilling();
-        }
+        toggleOnboarding(true);
       }
 
       onboardingForm.addEventListener("submit", async (event) => {
