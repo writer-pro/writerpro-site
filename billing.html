@@ -617,8 +617,9 @@
         const valid = await validateSession();
         if (!valid) {
           setBillingLocked(true);
-          authState.textContent = "Session expired. Please sign in again.";
-          billingStatus.textContent = "Session expired. Please sign in again.";
+          authState.textContent = "Session expired. Redirecting to sign in...";
+          billingStatus.textContent = "Session expired. Redirecting to sign in...";
+          navigateWithFade("app.html?next=billing.html&signed_out=1");
           return;
         }
 
