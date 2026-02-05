@@ -39,9 +39,18 @@
         <div class="card">
           <h3>ACCOUNT ACCESS</h3>
           <p>Use the same email you use on the Mac app.</p>
+          <div class="auth-tabs">
+            <button class="btn btn-outline is-active" id="tab-signin" type="button">Sign In</button>
+            <button class="btn btn-outline" id="tab-signup" type="button">Create Account</button>
+          </div>
           <div class="form-stack">
+            <div class="two-col" id="signup-names">
+              <input class="input" id="first-name" type="text" placeholder="First name" autocomplete="given-name" />
+              <input class="input" id="last-name" type="text" placeholder="Last name" autocomplete="family-name" />
+            </div>
             <input class="input" id="email" type="email" placeholder="Email" autocomplete="email" />
             <input class="input" id="password" type="password" placeholder="Password" autocomplete="current-password" />
+            <input class="input" id="password-confirm" type="password" placeholder="Confirm password" autocomplete="new-password" />
             <button class="btn btn-primary" id="login">
               <span>Sign In</span>
               <span class="mini-spinner" id="auth-spinner" aria-hidden="true"></span>
@@ -181,6 +190,12 @@
 
       const emailEl = document.getElementById("email");
       const passwordEl = document.getElementById("password");
+      const passwordConfirmEl = document.getElementById("password-confirm");
+      const firstNameEl = document.getElementById("first-name");
+      const lastNameEl = document.getElementById("last-name");
+      const signupNamesRow = document.getElementById("signup-names");
+      const tabSignIn = document.getElementById("tab-signin");
+      const tabSignUp = document.getElementById("tab-signup");
       const authStatus = document.getElementById("auth-status");
       const authSpinner = document.getElementById("auth-spinner");
       const loginBtn = document.getElementById("login");
@@ -245,6 +260,18 @@
         } else {
           if (loginLabel) loginLabel.textContent = "Sign In";
         }
+      }
+
+      function setAuthMode(mode) {
+        const isSignup = mode === "signup";
+        tabSignIn.classList.toggle("is-active", !isSignup);
+        tabSignUp.classList.toggle("is-active", isSignup);
+        signupNamesRow.style.display = isSignup ? "grid" : "none";
+        passwordConfirmEl.style.display = isSignup ? "block" : "none";
+        loginBtn.style.display = isSignup ? "none" : "inline-flex";
+        signupBtn.style.display = isSignup ? "inline-flex" : "none";
+        passwordEl.setAttribute("autocomplete", isSignup ? "new-password" : "current-password");
+        authStatus.textContent = "";
       }
 
       function goToBilling() {
@@ -320,6 +347,9 @@
       async function signUp() {
         const email = emailEl.value.trim();
         const password = passwordEl.value;
+        const confirm = passwordConfirmEl.value;
+        const firstName = firstNameEl.value.trim();
+        const lastName = lastNameEl.value.trim();
         if (!email || !password) {
           authStatus.textContent = "Enter email and password.";
           return;
@@ -328,8 +358,16 @@
           authStatus.textContent = "Enter a valid email address.";
           return;
         }
+        if (!firstName || !lastName) {
+          authStatus.textContent = "Enter first and last name.";
+          return;
+        }
         if (password.length < 8) {
           authStatus.textContent = "Use a password with at least 8 characters.";
+          return;
+        }
+        if (password !== confirm) {
+          authStatus.textContent = "Passwords do not match.";
           return;
         }
         setAuthLoading(true);
@@ -338,7 +376,11 @@
           const res = await supabaseRequest("/auth/v1/signup", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({
+              email,
+              password,
+              data: { first_name: firstName, last_name: lastName }
+            })
           });
           if (!res.ok) {
             authStatus.textContent = "Sign up failed.";
@@ -350,6 +392,7 @@
           if (payload && payload.access_token) {
             storeSession(payload);
             authStatus.textContent = "Account created. Finishing setup...";
+            await syncProfileFromAuth();
             await afterAuthSuccess();
           } else {
             authStatus.textContent = "Account created. Check your email, then sign in.";
@@ -387,6 +430,30 @@
         return rows && rows.length > 0 ? rows[0] : { onboarding_completed: false };
       }
 
+      async function syncProfileFromAuth() {
+        try {
+          const userRes = await supabaseRequest("/auth/v1/user", { method: "GET" });
+          if (!userRes.ok) return;
+          const user = await userRes.json();
+          if (!user?.id) return;
+          const meta = user.user_metadata || {};
+          const payload = {
+            id: user.id,
+            email: user.email || "",
+            first_name: meta.first_name || "",
+            last_name: meta.last_name || ""
+          };
+          await supabaseRequest("/rest/v1/profiles", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Prefer": "resolution=merge-duplicates"
+            },
+            body: JSON.stringify(payload)
+          });
+        } catch {}
+      }
+
       async function applyReferralIfNeeded() {
         const code = (localStorage.getItem("wp_referral_pending") || "").trim();
         if (!code) return;
@@ -407,6 +474,7 @@
       }
 
       async function afterAuthSuccess() {
+        await syncProfileFromAuth();
         const profile = await fetchProfile();
         const newSignup = localStorage.getItem("wp_new_signup") === "1";
         if (profile && profile.onboarding_completed) {
@@ -475,6 +543,9 @@
         setTimeout(() => { window.location.href = url; }, 240);
       }
 
+      tabSignIn.addEventListener("click", () => setAuthMode("signin"));
+      tabSignUp.addEventListener("click", () => setAuthMode("signup"));
+
       document.querySelectorAll(".page-link").forEach((link) => {
         link.addEventListener("click", (event) => {
           const href = link.getAttribute("href") || "";
@@ -497,6 +568,7 @@
       });
 
       loadSession();
+      setAuthMode("signin");
       updateSessionUI();
       const refParam = new URLSearchParams(window.location.search).get("ref");
       if (refParam) {
