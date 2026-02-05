@@ -1410,6 +1410,15 @@ body.reduced-motion * {
   gap: 14px;
 }
 
+.onboarding-step.animate {
+  animation: step-in 0.25s ease;
+}
+
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .onboarding-step-count {
   font-size: 12px;
   text-transform: uppercase;

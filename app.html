@@ -520,6 +520,12 @@
         renderOptions(step);
         setProgress();
         setStepButtons();
+        const stepEl = document.querySelector(".onboarding-step");
+        if (stepEl) {
+          stepEl.classList.remove("animate");
+          void stepEl.offsetWidth;
+          stepEl.classList.add("animate");
+        }
       }
 
       function canAdvance() {
@@ -689,7 +695,10 @@
           onboardingStatus.textContent = "Saved! Redirecting...";
           toggleOnboarding(false);
           localStorage.removeItem("wp_new_signup");
-          goToBilling();
+          localStorage.removeItem("wp_session");
+          sessionStorage.removeItem("wp_session");
+          session = null;
+          navigateWithFade("app.html?onboarding_done=1");
         } catch (error) {
           onboardingStatus.textContent = `Save failed: ${error.message || "network error"}`;
         } finally {
@@ -737,6 +746,9 @@
       const params = new URLSearchParams(window.location.search);
       if (params.get("signed_out") === "1") {
         authStatus.textContent = "Signed out. Please sign in again.";
+      }
+      if (params.get("onboarding_done") === "1") {
+        authStatus.textContent = "Setup complete. Please sign in.";
       }
       if (hasSessionToken()) {
         afterAuthSuccess();
