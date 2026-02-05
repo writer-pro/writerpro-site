@@ -723,7 +723,7 @@
           localStorage.removeItem("wp_session");
           sessionStorage.removeItem("wp_session");
           session = null;
-          navigateWithFade("app.html?onboarding_done=1");
+          navigateWithFade("download.html");
         } catch (error) {
           onboardingStatus.textContent = `Save failed: ${error.message || "network error"}`;
         } finally {
