@@ -272,6 +272,24 @@
         return fetch(`${SUPABASE_URL}${path}`, { ...options, headers });
       }
 
+      async function refreshSession() {
+        if (!session || !session.refresh_token) return false;
+        try {
+          const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY },
+            body: JSON.stringify({ refresh_token: session.refresh_token })
+          });
+          if (!res.ok) return false;
+          const next = await res.json();
+          if (!next || !next.access_token) return false;
+          storeSession(next);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+
       function setAuthLoading(isLoading) {
         authSpinner.classList.toggle("active", isLoading);
         loginBtn.classList.toggle("is-loading", isLoading);
@@ -687,6 +705,18 @@
             body: JSON.stringify({ data: payload })
           });
           if (!res.ok) {
+            if (res.status === 401) {
+              const refreshed = await refreshSession();
+              if (refreshed) {
+                onboardingStatus.textContent = "Session refreshed. Saving...";
+                onboardingSubmit.disabled = false;
+                return;
+              }
+              onboardingStatus.textContent = "Session expired. Please sign in again.";
+              toggleOnboarding(false);
+              navigateWithFade("app.html?signed_out=1");
+              return;
+            }
             const text = await res.text();
             onboardingStatus.textContent = `Save failed: ${text}`;
             return;
