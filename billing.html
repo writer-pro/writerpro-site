@@ -61,14 +61,25 @@
 
         <div class="card">
           <h3>SUBSCRIPTIONS</h3>
-          <p class="subtle">Best value for steady weekly writing. Study Pro requires the mid‑tier subscription. Test Pro requires the highest tier.</p>
+          <p class="subtle">Writer Pro, Study Pro, and Test Pro monthly plans. Unlimited plans unlock everything with no credit limits.</p>
           <div class="pricing-grid account-pricing-grid">
-            <button class="btn btn-outline buy" data-pack="credits_65_monthly" type="button">Monthly 65 (60 + 5 bonus) • $4.99 CAD</button>
-            <button class="btn btn-outline buy" data-pack="credits_180_monthly" type="button">Monthly 180 (160 + 20 bonus) • $11.99 CAD</button>
-            <button class="btn btn-outline buy" data-pack="credits_430_monthly" type="button">Monthly 430 (400 + 30 bonus) • $24.99 CAD</button>
+            <button class="btn btn-outline buy" data-pack="credits_65_monthly" type="button">Writer Pro Monthly • $4.99 CAD</button>
+            <button class="btn btn-outline buy" data-pack="credits_180_monthly" type="button">Study Pro Monthly • $11.99 CAD</button>
+            <button class="btn btn-outline buy" data-pack="credits_430_monthly" type="button">Test Pro Monthly • $24.99 CAD</button>
+            <button class="btn btn-outline buy" data-pack="unlimited_monthly" type="button">Unlimited Monthly • $29.99 CAD</button>
+            <button class="btn btn-outline buy" data-pack="unlimited_yearly" type="button">Unlimited Yearly • $199 CAD</button>
           </div>
           <div class="cta-row" style="margin-top: 12px;">
             <button class="btn btn-outline" id="portal">Manage Subscription</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>LIMITED‑TIME PASSES</h3>
+          <p class="subtle">Unlimited access for short sprints. Unlocks Writer + Study + Test.</p>
+          <div class="pricing-grid account-pricing-grid">
+            <button class="btn btn-outline buy" data-pack="pass_24h" type="button">24‑Hour Unlimited • $4.99 CAD</button>
+            <button class="btn btn-outline buy" data-pack="pass_7d" type="button">7‑Day Unlimited • $14.99 CAD</button>
           </div>
         </div>
 
@@ -537,7 +548,7 @@
         }
         const user = await userRes.json();
         const email = user ? user.email : "";
-        const res = await supabaseRequest(`/rest/v1/profiles?select=credits,email,is_admin&email=eq.${encodeURIComponent(email)}`, {
+        const res = await supabaseRequest(`/rest/v1/profiles?select=credits,email,is_admin,subscription_tier,access_expires_at&email=eq.${encodeURIComponent(email)}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" }
         });
@@ -546,8 +557,12 @@
           return;
         }
         const data = await res.json();
-        const nextCredits = (data && data[0] && typeof data[0].credits === "number") ? data[0].credits : 0;
-        creditsEl.textContent = `Balance: ${nextCredits}`;
+        const profile = data && data[0] ? data[0] : null;
+        const nextCredits = profile && typeof profile.credits === "number" ? profile.credits : 0;
+        const tier = profile && profile.subscription_tier ? profile.subscription_tier : "";
+        const expiresAt = profile && profile.access_expires_at ? new Date(profile.access_expires_at) : null;
+        const hasUnlimited = tier === "unlimited" || (expiresAt && expiresAt.getTime() > Date.now());
+        creditsEl.textContent = hasUnlimited ? "Balance: Unlimited" : `Balance: ${nextCredits}`;
         billingStatus.textContent = "";
       }
 
