@@ -65,8 +65,13 @@
     <div class="onboarding-overlay" id="onboarding-overlay" aria-hidden="true">
       <div class="onboarding-card">
         <div class="onboarding-head">
-          <h3>Tell us about your workflow</h3>
-          <p class="subtle">Personalize Writer Pro from day one.</p>
+          <div>
+            <h3>Tell us about your workflow</h3>
+            <p class="subtle">Personalize Writer Pro from day one.</p>
+          </div>
+          <button class="btn btn-outline btn-icon" id="onb-close" type="button" aria-label="Exit setup">
+            <span aria-hidden="true">✕</span>
+          </button>
         </div>
         <form class="onboarding-form" id="onboarding-form">
           <div class="onboarding-progress">
@@ -124,6 +129,7 @@
       const onboardingBack = document.getElementById("onb-back");
       const onboardingNext = document.getElementById("onb-next");
       const onboardingSkip = document.getElementById("onb-skip");
+      const onboardingClose = document.getElementById("onb-close");
 
       const onboardingSteps = [
         {
@@ -260,6 +266,10 @@
             }
           }
         } catch {}
+      }
+
+      function clearSession() {
+        storeSession(null);
       }
 
       function loadSession() {
@@ -595,6 +605,13 @@
         }
       });
 
+      onboardingClose.addEventListener("click", () => {
+        toggleOnboarding(false);
+        clearSession();
+        localStorage.removeItem("wp_new_signup");
+        authStatus.textContent = "Setup cancelled. Please sign in again.";
+      });
+
       async function fetchProfile() {
         const userRes = await supabaseRequest("/auth/v1/user", { method: "GET" });
         if (!userRes.ok) return null;
@@ -754,6 +771,15 @@
           });
         }
 
+        async function confirmOnboardingSaved() {
+          let profile = await fetchProfile();
+          if (profile && profile.onboarding_completed) return true;
+          const refreshed = await refreshSession();
+          if (!refreshed) return false;
+          profile = await fetchProfile();
+          return !!(profile && profile.onboarding_completed);
+        }
+
         try {
           let res = await sendOnboarding();
           if (!res.ok) {
@@ -763,6 +789,12 @@
                 onboardingStatus.textContent = "Session refreshed. Saving...";
                 res = await sendOnboarding();
                 if (res.ok) {
+                  const confirmed = await confirmOnboardingSaved();
+                  if (!confirmed) {
+                    onboardingStatus.textContent = "We couldn't confirm your setup was saved. Please try again.";
+                    onboardingSubmit.disabled = false;
+                    return;
+                  }
                   return finishOnboarding();
                 }
               }
@@ -773,6 +805,11 @@
             }
             const text = await res.text();
             onboardingStatus.textContent = `Save failed: ${text}`;
+            return;
+          }
+          const confirmed = await confirmOnboardingSaved();
+          if (!confirmed) {
+            onboardingStatus.textContent = "We couldn't confirm your setup was saved. Please try again.";
             return;
           }
           return finishOnboarding();
