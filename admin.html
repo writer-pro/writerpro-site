@@ -238,6 +238,7 @@
         accessStatusEl.textContent = "Checking access...";
         checkEl.disabled = true;
         setAdminUnlocked(false);
+        await loadSession();
         const ready = await ensureSessionReady();
         if (!ready) {
           window.location.href = "app.html?next=admin.html";
