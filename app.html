@@ -677,7 +677,12 @@
           goToBilling();
           return;
         }
-        toggleOnboarding(true);
+        if (newSignup) {
+          toggleOnboarding(true);
+        } else {
+          authStatus.textContent = "Signed in. Redirecting to dashboard...";
+          goToBilling();
+        }
       }
 
       async function submitOnboarding(event) {
