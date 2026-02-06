@@ -257,7 +257,7 @@
         await loadSession();
         const ready = await ensureSessionReady();
         if (!ready) {
-          window.location.href = "app.html?next=admin.html";
+          window.location.href = "app.html?next=admin.html&skip_onboarding=1";
           checkEl.disabled = false;
           return false;
         }

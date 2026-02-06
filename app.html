@@ -312,6 +312,24 @@
         }
       }
 
+      function setSkipOnboarding(value) {
+        try {
+          if (value) {
+            localStorage.setItem("wp_skip_onboarding", "1");
+          } else {
+            localStorage.removeItem("wp_skip_onboarding");
+          }
+        } catch {}
+      }
+
+      function shouldSkipOnboarding() {
+        try {
+          return localStorage.getItem("wp_skip_onboarding") === "1";
+        } catch {
+          return false;
+        }
+      }
+
       function pendingOnboardingKey(identity) {
         return `wp_onboarding_pending_${identity || "unknown"}`;
       }
@@ -827,6 +845,13 @@
           goToBilling();
           return;
         }
+        if (shouldSkipOnboarding()) {
+          localStorage.removeItem("wp_new_signup");
+          setOnboardingUserId("");
+          authStatus.textContent = "Signed in. Redirecting to dashboard...";
+          goToBilling();
+          return;
+        }
         if (pending && profile && profile.onboarding_completed === false) {
           try {
             await ensureSessionReady();
@@ -975,6 +1000,7 @@
         localStorage.removeItem("wp_new_signup");
         markOnboardingDone(getIdentityKey(getOnboardingUserId()));
         setOnboardingUserId("");
+        setSkipOnboarding(false);
         const tokenHash = buildTokenHash();
         const target = tokenHash ? appendHash("download.html", tokenHash) : "download.html";
         window.location.href = target;
@@ -1023,6 +1049,9 @@
       const params = new URLSearchParams(window.location.search);
       if (params.get("signed_out") === "1") {
         authStatus.textContent = "Signed out. Please sign in again.";
+      }
+      if (params.get("skip_onboarding") === "1") {
+        setSkipOnboarding(true);
       }
       const nextParam = params.get("next") || "";
       if (params.get("signed_out") === "1" && nextParam.includes("billing.html")) {
