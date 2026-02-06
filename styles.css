@@ -1182,17 +1182,17 @@ body.reduced-motion * {
 }
 
 .admin-shell {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
 }
 
 .admin-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
+  grid-template-columns: minmax(280px, 340px) 1fr;
+  gap: 18px;
 }
 
 .admin-locked .admin-grid {
@@ -1210,7 +1210,7 @@ body.reduced-motion * {
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
 }
 
 .admin-access-panel {
@@ -1224,7 +1224,7 @@ body.reduced-motion * {
 }
 
 .admin-panel-wide {
-  padding: 22px;
+  padding: 24px;
 }
 
 .admin-panel-head {
@@ -1237,6 +1237,8 @@ body.reduced-motion * {
 
 .admin-panel h3 {
   margin-bottom: 4px;
+  font-size: 16px;
+  letter-spacing: 0.01em;
 }
 
 .admin-pill {
@@ -1249,7 +1251,7 @@ body.reduced-motion * {
 }
 
 .admin-kpis {
-  margin: 16px 0 18px;
+  margin: 18px 0 20px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
@@ -1257,7 +1259,7 @@ body.reduced-motion * {
 
 .admin-kpi {
   background: var(--surface-alt);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 14px 16px;
 }
@@ -1276,7 +1278,7 @@ body.reduced-motion * {
 }
 
 .admin-cta {
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
 .admin-page .notice {
@@ -1284,7 +1286,19 @@ body.reduced-motion * {
 }
 
 .admin-page .input {
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(15, 23, 42, 0.82);
+}
+
+.admin-section-title {
+  margin-top: 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.admin-form-stack {
+  gap: 12px;
 }
 
 .admin-toggle {
@@ -1390,6 +1404,17 @@ body.reduced-motion * {
   list-style: none;
 }
 
+.admin-referral-uses summary::after {
+  content: "›";
+  float: right;
+  opacity: 0.6;
+  transform: rotate(90deg);
+}
+
+.admin-referral-uses[open] summary::after {
+  transform: rotate(-90deg);
+}
+
 .admin-referral-uses summary::-webkit-details-marker {
   display: none;
 }
@@ -1464,6 +1489,12 @@ body.reduced-motion * {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(15, 23, 42, 0.6);
   font-size: 13px;
+}
+
+@media (max-width: 980px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .admin-log strong {
