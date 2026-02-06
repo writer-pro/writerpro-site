@@ -135,6 +135,32 @@
       }
 
       let session = null;
+      function ingestSessionFromHash() {
+        const hash = window.location.hash || "";
+        if (!hash || hash.length < 2) return;
+        const params = new URLSearchParams(hash.substring(1));
+        const accessToken = params.get("access_token");
+        if (!accessToken) return;
+        const refreshToken = params.get("refresh_token") || "";
+        const expiresAt = params.get("expires_at");
+        const tokenType = params.get("token_type") || "bearer";
+        const nextSession = {
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_at: expiresAt ? parseInt(expiresAt, 10) : undefined,
+          token_type: tokenType
+        };
+        session = nextSession;
+        try {
+          const serialized = JSON.stringify(nextSession);
+          localStorage.setItem("wp_session", serialized);
+          sessionStorage.setItem("wp_session", serialized);
+          window.name = `wp_session:${serialized}`;
+        } catch {}
+        try {
+          history.replaceState({}, document.title, window.location.pathname + window.location.search);
+        } catch {}
+      }
       function loadSession() {
         try {
           const raw = localStorage.getItem("wp_session") || sessionStorage.getItem("wp_session");
@@ -324,6 +350,7 @@
       submitEl.addEventListener("click", submitUpdate);
       resetEl.addEventListener("click", resetForm);
 
+      ingestSessionFromHash();
       loadSession();
       passkeyEl.value = "";
       setAdminUnlocked(false);
