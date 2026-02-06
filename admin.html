@@ -86,6 +86,14 @@
               <span class="label">Admin</span>
               <strong id="admin-user-admin">—</strong>
             </div>
+            <div class="admin-kpi">
+              <span class="label">Referral Code</span>
+              <strong id="admin-user-referral-code">—</strong>
+            </div>
+            <div class="admin-kpi">
+              <span class="label">Code Uses</span>
+              <strong id="admin-user-referral-uses">—</strong>
+            </div>
           </div>
 
           <div class="form-stack">
@@ -97,6 +105,7 @@
               <input class="input" id="admin-credits-add" type="number" placeholder="Credits to add" />
               <input class="input" id="admin-credits-set" type="number" placeholder="Set credits" />
             </div>
+            <input class="input" id="admin-referral-code-set" type="text" placeholder="Set referral code (unique)" />
             <select class="input" id="admin-tier">
               <option value="">Keep current tier</option>
               <option value="writer">Writer (65)</option>
@@ -112,6 +121,11 @@
               <input class="input" id="admin-password-confirm" type="password" placeholder="Confirm new password" />
             </div>
           </div>
+
+          <details class="admin-panel admin-referral-uses">
+            <summary>Referral Uses</summary>
+            <div class="referral-list" id="admin-referral-uses-list">No uses yet.</div>
+          </details>
 
           <div class="cta-row admin-cta">
             <button class="btn btn-outline" id="admin-reset-form">Reset</button>
@@ -142,11 +156,15 @@
       const userCreditsEl = document.getElementById("admin-user-credits");
       const userTierEl = document.getElementById("admin-user-tier");
       const userAdminEl = document.getElementById("admin-user-admin");
+      const userReferralCodeEl = document.getElementById("admin-user-referral-code");
+      const userReferralUsesEl = document.getElementById("admin-user-referral-uses");
+      const referralUsesListEl = document.getElementById("admin-referral-uses-list");
 
       const emailEl = document.getElementById("admin-email");
       const emailSetEl = document.getElementById("admin-email-set");
       const addEl = document.getElementById("admin-credits-add");
       const setEl = document.getElementById("admin-credits-set");
+      const referralCodeSetEl = document.getElementById("admin-referral-code-set");
       const tierEl = document.getElementById("admin-tier");
       const adminToggleEl = document.getElementById("admin-is-admin");
       const passEl = document.getElementById("admin-password");
@@ -338,10 +356,20 @@
         if (userCreditsEl) userCreditsEl.textContent = typeof data.credits === "number" ? data.credits.toLocaleString() : "—";
         if (userTierEl) userTierEl.textContent = data.subscription_tier || "—";
         if (userAdminEl) userAdminEl.textContent = data.is_admin ? "Yes" : "No";
+        if (userReferralCodeEl) userReferralCodeEl.textContent = data.referral_code || "—";
+        if (userReferralUsesEl) userReferralUsesEl.textContent = typeof data.referral_uses_count === "number" ? data.referral_uses_count.toString() : "—";
+        if (referralUsesListEl) {
+          if (Array.isArray(data.referral_uses_emails) && data.referral_uses_emails.length) {
+            referralUsesListEl.innerHTML = data.referral_uses_emails.map((email) => `<div class="referral-item">${email}</div>`).join("");
+          } else {
+            referralUsesListEl.textContent = "No uses yet.";
+          }
+        }
         emailEl.value = data.email || "";
         emailSetEl.value = "";
         addEl.value = "";
         setEl.value = "";
+        if (referralCodeSetEl) referralCodeSetEl.value = "";
         tierEl.value = "";
         adminToggleEl.checked = !!data.is_admin;
         passEl.value = "";
@@ -392,6 +420,8 @@
         payload.is_admin_set = !!adminToggleEl.checked;
         const emailSet = (emailSetEl.value || "").trim().toLowerCase();
         if (emailSet) payload.email_set = emailSet;
+        const referralSet = (referralCodeSetEl.value || "").trim();
+        if (referralSet) payload.referral_code_set = referralSet;
         const pass = (passEl.value || "").trim();
         if (pass) {
           if (pass !== (passConfirmEl.value || "").trim()) {
@@ -424,6 +454,7 @@
         emailSetEl.value = "";
         addEl.value = "";
         setEl.value = "";
+        if (referralCodeSetEl) referralCodeSetEl.value = "";
         tierEl.value = "";
         adminToggleEl.checked = false;
         passEl.value = "";

@@ -1326,6 +1326,37 @@ body.reduced-motion * {
   margin-top: 8px;
 }
 
+.admin-referral-uses {
+  margin-top: 16px;
+  padding: 16px 18px;
+}
+
+.admin-referral-uses summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+  list-style: none;
+}
+
+.admin-referral-uses summary::-webkit-details-marker {
+  display: none;
+}
+
+.referral-list {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+  color: var(--text-secondary);
+}
+
+.referral-item {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.5);
+  font-size: 13px;
+}
+
 .input-group {
   display: grid;
   grid-template-columns: 1fr auto;
