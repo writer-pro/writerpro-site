@@ -300,6 +300,15 @@
         }
       }
 
+      async function ensureSessionReady() {
+        loadSession();
+        if (hasSessionToken()) return true;
+        if (getRefreshToken()) {
+          return await refreshSession();
+        }
+        return false;
+      }
+
       function updateSessionUI() {
         // Sign-in page should redirect if already signed in.
       }
@@ -744,7 +753,7 @@
 
       async function submitOnboarding(event) {
         event.preventDefault();
-        if (!hasSessionToken()) {
+        if (!await ensureSessionReady()) {
           onboardingStatus.textContent = "Please sign in to finish setup.";
           onboardingSubmit.disabled = false;
           return;
