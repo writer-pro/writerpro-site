@@ -229,15 +229,26 @@
       const onboardingAnswers = {};
 
       let session = null;
+      function normalizeSession(next) {
+        if (!next) return null;
+        if (next.session && next.session.access_token) return next.session;
+        return next;
+      }
+      function getAccessToken() {
+        return session && session.access_token ? session.access_token : "";
+      }
+      function getRefreshToken() {
+        return session && session.refresh_token ? session.refresh_token : "";
+      }
       function hasSessionToken() {
-        return !!(session && session.access_token);
+        return !!getAccessToken();
       }
 
       function storeSession(next) {
-        session = next;
+        session = normalizeSession(next);
         try {
-          if (next) {
-            const serialized = JSON.stringify(next);
+          if (session) {
+            const serialized = JSON.stringify(session);
             localStorage.setItem("wp_session", serialized);
             sessionStorage.setItem("wp_session", serialized);
             window.name = `wp_session:${serialized}`;
@@ -255,7 +266,7 @@
         try {
           const raw = localStorage.getItem("wp_session");
           const fallback = sessionStorage.getItem("wp_session");
-          if (raw || fallback) session = JSON.parse(raw || fallback);
+          if (raw || fallback) session = normalizeSession(JSON.parse(raw || fallback));
         } catch {
           session = null;
         }
@@ -268,17 +279,17 @@
       async function supabaseRequest(path, options) {
         const headers = options.headers || {};
         headers["apikey"] = SUPABASE_ANON_KEY;
-        if (hasSessionToken()) headers["Authorization"] = `Bearer ${session.access_token}`;
+        if (hasSessionToken()) headers["Authorization"] = `Bearer ${getAccessToken()}`;
         return fetch(`${SUPABASE_URL}${path}`, { ...options, headers });
       }
 
       async function refreshSession() {
-        if (!session || !session.refresh_token) return false;
+        if (!session || !getRefreshToken()) return false;
         try {
           const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
             method: "POST",
             headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY },
-            body: JSON.stringify({ refresh_token: session.refresh_token })
+            body: JSON.stringify({ refresh_token: getRefreshToken() })
           });
           if (!res.ok) return false;
           const next = await res.json();
@@ -327,10 +338,10 @@
       function buildTokenHash() {
         if (!hasSessionToken()) return "";
         const parts = [];
-        if (session.access_token) parts.push(`access_token=${encodeURIComponent(session.access_token)}`);
-        if (session.refresh_token) parts.push(`refresh_token=${encodeURIComponent(session.refresh_token)}`);
-        if (session.expires_at) parts.push(`expires_at=${encodeURIComponent(session.expires_at)}`);
-        if (session.token_type) parts.push(`token_type=${encodeURIComponent(session.token_type)}`);
+        if (getAccessToken()) parts.push(`access_token=${encodeURIComponent(getAccessToken())}`);
+        if (getRefreshToken()) parts.push(`refresh_token=${encodeURIComponent(getRefreshToken())}`);
+        if (session && session.expires_at) parts.push(`expires_at=${encodeURIComponent(session.expires_at)}`);
+        if (session && session.token_type) parts.push(`token_type=${encodeURIComponent(session.token_type)}`);
         return parts.join("&");
       }
 
@@ -630,7 +641,7 @@
             headers: {
               "Content-Type": "application/json",
               apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${session.access_token}`
+              Authorization: `Bearer ${getAccessToken()}`
             },
             body: JSON.stringify({ code })
           });
@@ -648,7 +659,7 @@
             headers: {
               "Content-Type": "application/json",
               apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${session.access_token}`
+              Authorization: `Bearer ${getAccessToken()}`
             },
             body: JSON.stringify({ code })
           });
@@ -737,7 +748,7 @@
             headers: {
               "Content-Type": "application/json",
               apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${session.access_token}`
+              Authorization: `Bearer ${getAccessToken()}`
             },
             body: JSON.stringify({ data: payload })
           });
