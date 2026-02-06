@@ -1024,6 +1024,11 @@
       if (params.get("signed_out") === "1") {
         authStatus.textContent = "Signed out. Please sign in again.";
       }
+      const nextParam = params.get("next") || "";
+      if (params.get("signed_out") === "1" && nextParam.includes("billing.html")) {
+        localStorage.removeItem("wp_new_signup");
+        setOnboardingUserId("");
+      }
       if (params.get("onboarding_done") === "1") {
         authStatus.textContent = "Setup complete. Please sign in.";
       }

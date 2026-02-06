@@ -689,7 +689,7 @@
           authState.textContent = "Not signed in. Sign in to continue.";
           markRequestedPack();
           billingStatus.textContent = "Sign in to manage credits.";
-          navigateWithFade("app.html?next=billing.html");
+          navigateWithFade("app.html?next=billing.html&signed_out=1");
           return;
         }
 
@@ -698,6 +698,10 @@
           setBillingLocked(true);
           authState.textContent = "Session expired. Redirecting to sign in...";
           billingStatus.textContent = "Session expired. Redirecting to sign in...";
+          try {
+            localStorage.removeItem("wp_session");
+            sessionStorage.removeItem("wp_session");
+          } catch {}
           navigateWithFade("app.html?next=billing.html&signed_out=1");
           return;
         }
