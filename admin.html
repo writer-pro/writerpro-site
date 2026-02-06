@@ -77,6 +77,10 @@
               <strong id="admin-user-tier">—</strong>
             </div>
             <div class="admin-kpi">
+              <span class="label">Name</span>
+              <strong id="admin-user-name">—</strong>
+            </div>
+            <div class="admin-kpi">
               <span class="label">Admin</span>
               <strong id="admin-user-admin">—</strong>
             </div>
@@ -119,7 +123,14 @@
               <input class="input" id="admin-email-set" type="email" placeholder="Set new email (optional)" />
             </div>
             <div class="two-col">
-              <input class="input" id="admin-referral-set" type="text" placeholder="Set referral code (optional)" />
+              <input class="input" id="admin-first-name" type="text" placeholder="First name" />
+              <input class="input" id="admin-last-name" type="text" placeholder="Last name" />
+            </div>
+            <div class="two-col">
+              <div class="input-group">
+                <input class="input" id="admin-referral-set" type="text" placeholder="Set referral code (optional)" />
+                <button class="btn btn-outline btn-compact" id="admin-generate-referral" type="button">Generate</button>
+              </div>
               <input class="input" id="admin-referred-by" type="text" placeholder="Referred by (read-only)" disabled />
             </div>
             <div class="two-col">
@@ -187,6 +198,7 @@
       const userIdEl = document.getElementById("admin-user-id");
       const userCreditsEl = document.getElementById("admin-user-credits");
       const userTierEl = document.getElementById("admin-user-tier");
+      const userNameEl = document.getElementById("admin-user-name");
       const userAdminEl = document.getElementById("admin-user-admin");
       const userReferralEl = document.getElementById("admin-user-referral");
       const userReferredEl = document.getElementById("admin-user-referred");
@@ -198,7 +210,10 @@
 
       const emailEl = document.getElementById("admin-email");
       const emailSetEl = document.getElementById("admin-email-set");
+      const firstNameEl = document.getElementById("admin-first-name");
+      const lastNameEl = document.getElementById("admin-last-name");
       const referralSetEl = document.getElementById("admin-referral-set");
+      const generateReferralEl = document.getElementById("admin-generate-referral");
       const referredByEl = document.getElementById("admin-referred-by");
       const addEl = document.getElementById("admin-credits-add");
       const setEl = document.getElementById("admin-credits-set");
@@ -313,6 +328,7 @@
         userIdEl.textContent = data.id ? `ID: ${data.id}` : "No user loaded";
         userCreditsEl.textContent = typeof data.credits === "number" ? data.credits.toLocaleString() : "—";
         userTierEl.textContent = data.subscription_tier || "—";
+        userNameEl.textContent = `${data.first_name || ""} ${data.last_name || ""}`.trim() || "—";
         userAdminEl.textContent = data.is_admin ? "Yes" : "No";
         userReferralEl.textContent = data.referral_code || "—";
         userReferredEl.textContent = data.referred_by || "—";
@@ -321,6 +337,8 @@
         referralLinkEl.value = buildReferralLink(data.referral_code);
         emailEl.value = data.email || "";
         emailSetEl.value = "";
+        firstNameEl.value = data.first_name || "";
+        lastNameEl.value = data.last_name || "";
         referralSetEl.value = data.referral_code || "";
         referredByEl.value = data.referred_by || "";
         addEl.value = "";
@@ -371,6 +389,8 @@
         if (!Number.isNaN(set)) payload.credits_set = set;
         if (tierEl.value) payload.subscription_tier = tierEl.value;
         payload.is_admin_set = !!adminToggleEl.checked;
+        payload.first_name_set = (firstNameEl.value || "").trim();
+        payload.last_name_set = (lastNameEl.value || "").trim();
         const referralCode = (referralSetEl.value || "").trim();
         payload.referral_code_set = referralCode;
         const emailSet = (emailSetEl.value || "").trim().toLowerCase();
@@ -405,6 +425,8 @@
 
       function resetForm() {
         emailSetEl.value = "";
+        firstNameEl.value = "";
+        lastNameEl.value = "";
         referralSetEl.value = "";
         addEl.value = "";
         setEl.value = "";
@@ -431,6 +453,15 @@
         } catch {
           statusEl.textContent = "Copy failed.";
         }
+      }
+
+      function generateReferral() {
+        const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let code = "";
+        for (let i = 0; i < 8; i += 1) {
+          code += letters.charAt(Math.floor(Math.random() * letters.length));
+        }
+        referralSetEl.value = code;
       }
 
       function navigateWithFade(url) {
@@ -473,6 +504,7 @@
       resetEl.addEventListener("click", resetForm);
       copyOnboardingEl.addEventListener("click", copyOnboarding);
       referralCopyEl.addEventListener("click", copyReferralLink);
+      if (generateReferralEl) generateReferralEl.addEventListener("click", generateReferral);
       refreshLogsEl.addEventListener("click", loadAuditLogs);
 
       loadSession();

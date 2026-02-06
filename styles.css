@@ -1309,6 +1309,13 @@ body.reduced-motion * {
   margin-top: 8px;
 }
 
+.input-group {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
 .admin-onboarding {
   margin: 12px 0 18px;
 }

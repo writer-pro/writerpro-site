@@ -640,6 +640,32 @@
         } catch {}
       }
 
+      async function validateReferral(code) {
+        if (!code) return { ok: true };
+        try {
+          const res = await fetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/apply-referral", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ code })
+          });
+          if (res.ok) {
+            localStorage.removeItem("wp_referral_pending");
+            return { ok: true };
+          }
+          if (res.status === 404) {
+            return { ok: false, message: "Invalid referral code. Leave it blank if you don't have one." };
+          }
+          const text = await res.text();
+          return { ok: false, message: text || "Referral validation failed." };
+        } catch (error) {
+          return { ok: false, message: error.message || "Referral validation failed." };
+        }
+      }
+
       async function afterAuthSuccess() {
         await syncProfileFromAuth();
         const profile = await fetchProfile();
@@ -676,7 +702,14 @@
           }
         }
         const referralInput = (onboardingAnswers.referral || "").trim();
-        if (referralInput) localStorage.setItem("wp_referral_pending", referralInput);
+        if (referralInput) {
+          const referralCheck = await validateReferral(referralInput);
+          if (!referralCheck.ok) {
+            onboardingStatus.textContent = referralCheck.message || "Invalid referral code.";
+            onboardingSubmit.disabled = false;
+            return;
+          }
+        }
 
         const payload = {
           role: onboardingAnswers.role || "",
@@ -731,13 +764,9 @@
       }
 
       async function finishOnboarding() {
-        await applyReferralIfNeeded();
         onboardingStatus.textContent = "Saved! Redirecting...";
         toggleOnboarding(false);
         localStorage.removeItem("wp_new_signup");
-        localStorage.removeItem("wp_session");
-        sessionStorage.removeItem("wp_session");
-        session = null;
         window.location.href = "download.html";
       }
 
