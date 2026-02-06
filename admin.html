@@ -69,6 +69,25 @@
             <div class="admin-pill" id="admin-user-id">No user loaded</div>
           </div>
 
+          <div class="admin-kpis">
+            <div class="admin-kpi">
+              <span class="label">Email</span>
+              <strong id="admin-user-email">—</strong>
+            </div>
+            <div class="admin-kpi">
+              <span class="label">Credits</span>
+              <strong id="admin-user-credits">—</strong>
+            </div>
+            <div class="admin-kpi">
+              <span class="label">Tier</span>
+              <strong id="admin-user-tier">—</strong>
+            </div>
+            <div class="admin-kpi">
+              <span class="label">Admin</span>
+              <strong id="admin-user-admin">—</strong>
+            </div>
+          </div>
+
           <div class="form-stack">
             <div class="two-col">
               <input class="input" id="admin-email" type="email" placeholder="Account email" />
@@ -119,6 +138,11 @@
       const searchEl = document.getElementById("admin-search");
 
       const userIdEl = document.getElementById("admin-user-id");
+      const userEmailEl = document.getElementById("admin-user-email");
+      const userCreditsEl = document.getElementById("admin-user-credits");
+      const userTierEl = document.getElementById("admin-user-tier");
+      const userAdminEl = document.getElementById("admin-user-admin");
+
       const emailEl = document.getElementById("admin-email");
       const emailSetEl = document.getElementById("admin-email-set");
       const addEl = document.getElementById("admin-credits-add");
@@ -310,6 +334,10 @@
 
       function setUserDetails(data) {
         userIdEl.textContent = data.id ? `ID: ${data.id}` : "No user loaded";
+        if (userEmailEl) userEmailEl.textContent = data.email || "—";
+        if (userCreditsEl) userCreditsEl.textContent = typeof data.credits === "number" ? data.credits.toLocaleString() : "—";
+        if (userTierEl) userTierEl.textContent = data.subscription_tier || "—";
+        if (userAdminEl) userAdminEl.textContent = data.is_admin ? "Yes" : "No";
         emailEl.value = data.email || "";
         emailSetEl.value = "";
         addEl.value = "";
