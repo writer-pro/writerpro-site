@@ -710,15 +710,7 @@
                 onboardingStatus.textContent = "Session refreshed. Saving...";
                 res = await sendOnboarding();
                 if (res.ok) {
-                  await applyReferralIfNeeded();
-                  onboardingStatus.textContent = "Saved! Redirecting...";
-                  toggleOnboarding(false);
-                  localStorage.removeItem("wp_new_signup");
-                  localStorage.removeItem("wp_session");
-                  sessionStorage.removeItem("wp_session");
-                  session = null;
-                  navigateWithFade("download.html");
-                  return;
+                  return finishOnboarding();
                 }
               }
               onboardingStatus.textContent = "Session expired. Please sign in again.";
@@ -730,19 +722,23 @@
             onboardingStatus.textContent = `Save failed: ${text}`;
             return;
           }
-          await applyReferralIfNeeded();
-          onboardingStatus.textContent = "Saved! Redirecting...";
-          toggleOnboarding(false);
-          localStorage.removeItem("wp_new_signup");
-          localStorage.removeItem("wp_session");
-          sessionStorage.removeItem("wp_session");
-          session = null;
-          navigateWithFade("download.html");
+          return finishOnboarding();
         } catch (error) {
           onboardingStatus.textContent = `Save failed: ${error.message || "network error"}`;
         } finally {
           onboardingSubmit.disabled = false;
         }
+      }
+
+      async function finishOnboarding() {
+        await applyReferralIfNeeded();
+        onboardingStatus.textContent = "Saved! Redirecting...";
+        toggleOnboarding(false);
+        localStorage.removeItem("wp_new_signup");
+        localStorage.removeItem("wp_session");
+        sessionStorage.removeItem("wp_session");
+        session = null;
+        window.location.href = "download.html";
       }
 
       onboardingForm.addEventListener("submit", submitOnboarding);
