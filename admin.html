@@ -36,6 +36,7 @@
             <h3>Access</h3>
             <p class="subtle">Admin session + passkey are required.</p>
             <div class="form-stack">
+              <input class="input" id="admin-username" type="text" placeholder="Admin username" />
               <input class="input" id="admin-passkey" type="password" placeholder="Admin passkey" />
               <div class="cta-row">
                 <button class="btn btn-primary" id="admin-check">Verify Access</button>
@@ -112,6 +113,7 @@
       const searchStatusEl = document.getElementById("admin-search-status");
       const statusEl = document.getElementById("admin-status");
       const passkeyEl = document.getElementById("admin-passkey");
+      const usernameEl = document.getElementById("admin-username");
       const checkEl = document.getElementById("admin-check");
       const searchEmailEl = document.getElementById("admin-search-email");
       const searchEl = document.getElementById("admin-search");
@@ -214,6 +216,9 @@
       function getPasskey() {
         return (localStorage.getItem("wp_admin_passkey") || "").trim();
       }
+      function getAdminUser() {
+        return (localStorage.getItem("wp_admin_user") || "").trim();
+      }
       function setPasskey() {
         const val = (passkeyEl.value || "").trim();
         if (!val) {
@@ -223,6 +228,15 @@
         localStorage.setItem("wp_admin_passkey", val);
         return true;
       }
+      function setAdminUser() {
+        const val = (usernameEl.value || "").trim();
+        if (!val) {
+          accessStatusEl.textContent = "Enter an admin username.";
+          return false;
+        }
+        localStorage.setItem("wp_admin_user", val);
+        return true;
+      }
 
       function authHeaders(extra = {}) {
         return {
@@ -230,10 +244,12 @@
           apikey: SUPABASE_ANON_KEY,
           Authorization: `Bearer ${session.access_token}`,
           "X-Admin-Passkey": getPasskey(),
+          "X-Admin-User": getAdminUser(),
         };
       }
 
       async function ensureAdmin() {
+        const hasUser = setAdminUser();
         const hasPasskey = setPasskey();
         accessStatusEl.textContent = "Checking access...";
         checkEl.disabled = true;
@@ -242,6 +258,11 @@
         const ready = await ensureSessionReady();
         if (!ready) {
           window.location.href = "app.html?next=admin.html";
+          checkEl.disabled = false;
+          return false;
+        }
+        if (!hasUser || !getAdminUser()) {
+          accessStatusEl.textContent = "Missing admin username.";
           checkEl.disabled = false;
           return false;
         }
@@ -402,6 +423,7 @@
 
       ingestSessionFromHash();
       loadSession();
+      if (usernameEl) usernameEl.value = "";
       passkeyEl.value = "";
       setAdminUnlocked(false);
     </script>
