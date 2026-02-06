@@ -127,6 +127,11 @@
             <div class="referral-list" id="admin-referral-uses-list">No uses yet.</div>
           </details>
 
+          <details class="admin-panel admin-referral-uses">
+            <summary>Purchase History</summary>
+            <div class="referral-list" id="admin-purchase-history">No purchases yet.</div>
+          </details>
+
           <div class="cta-row admin-cta">
             <button class="btn btn-outline" id="admin-reset-form">Reset</button>
             <button class="btn btn-primary" id="admin-submit">Apply Changes</button>
@@ -159,6 +164,7 @@
       const userReferralCodeEl = document.getElementById("admin-user-referral-code");
       const userReferralUsesEl = document.getElementById("admin-user-referral-uses");
       const referralUsesListEl = document.getElementById("admin-referral-uses-list");
+      const purchaseHistoryEl = document.getElementById("admin-purchase-history");
 
       const emailEl = document.getElementById("admin-email");
       const emailSetEl = document.getElementById("admin-email-set");
@@ -363,6 +369,20 @@
             referralUsesListEl.innerHTML = data.referral_uses_emails.map((email) => `<div class="referral-item">${email}</div>`).join("");
           } else {
             referralUsesListEl.textContent = "No uses yet.";
+          }
+        }
+        if (purchaseHistoryEl) {
+          if (Array.isArray(data.purchase_history) && data.purchase_history.length) {
+            purchaseHistoryEl.innerHTML = data.purchase_history.map((entry) => {
+              const amount = typeof entry.amount_cents === "number" ? (entry.amount_cents / 100).toFixed(2) : "—";
+              const currency = entry.currency ? entry.currency.toUpperCase() : "USD";
+              const credits = typeof entry.credits === "number" ? entry.credits.toLocaleString() : "—";
+              const pack = entry.pack_id || "Manual";
+              const status = entry.status || "paid";
+              return `<div class="referral-item">${pack} • ${credits} credits • ${currency} ${amount} • ${status}</div>`;
+            }).join("");
+          } else {
+            purchaseHistoryEl.textContent = "No purchases yet.";
           }
         }
         emailEl.value = data.email || "";
