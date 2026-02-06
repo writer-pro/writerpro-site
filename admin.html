@@ -169,30 +169,46 @@
       }
 
       async function ensureAdmin() {
-        setPasskey();
+        const hasPasskey = setPasskey();
         accessStatusEl.textContent = "Checking access...";
+        checkEl.disabled = true;
         setAdminUnlocked(false);
         if (!hasSessionToken()) {
           window.location.href = "app.html?next=admin.html";
+          checkEl.disabled = false;
           return false;
         }
-        if (!getPasskey()) {
+        if (!hasPasskey || !getPasskey()) {
           accessStatusEl.textContent = "Missing passkey.";
+          checkEl.disabled = false;
           return false;
         }
-        const res = await fetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-check", {
-          headers: authHeaders()
-        });
-        if (!res.ok) {
-          const text = await res.text();
-          accessStatusEl.textContent = `Access denied: ${text}`;
-          submitEl.disabled = true;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+        try {
+          const res = await fetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-check", {
+            headers: authHeaders(),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          if (!res.ok) {
+            const text = await res.text();
+            accessStatusEl.textContent = `Access denied: ${text}`;
+            submitEl.disabled = true;
+            checkEl.disabled = false;
+            return false;
+          }
+          accessStatusEl.textContent = "Admin access confirmed.";
+          submitEl.disabled = false;
+          setAdminUnlocked(true);
+          checkEl.disabled = false;
+          return true;
+        } catch (err) {
+          clearTimeout(timeoutId);
+          accessStatusEl.textContent = `Access check failed: ${err?.message || "network error"}`;
+          checkEl.disabled = false;
           return false;
         }
-        accessStatusEl.textContent = "Admin access confirmed.";
-        submitEl.disabled = false;
-        setAdminUnlocked(true);
-        return true;
       }
 
       function setUserDetails(data) {
