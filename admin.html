@@ -135,6 +135,11 @@
       }
 
       let session = null;
+      function normalizeSession(next) {
+        if (!next) return null;
+        if (next.session && next.session.access_token) return next.session;
+        return next;
+      }
       function ingestSessionFromHash() {
         const hash = window.location.hash || "";
         if (!hash || hash.length < 2) return;
@@ -164,7 +169,7 @@
       function loadSession() {
         try {
           const raw = localStorage.getItem("wp_session") || sessionStorage.getItem("wp_session");
-          if (raw) session = JSON.parse(raw);
+          if (raw) session = normalizeSession(JSON.parse(raw));
         } catch {
           session = null;
         }
@@ -247,10 +252,19 @@
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 12000);
         try {
-          const res = await fetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-check", {
+          let res = await fetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-check", {
             headers: authHeaders(),
             signal: controller.signal
           });
+          if (res.status === 401) {
+            const refreshed = await refreshSession();
+            if (refreshed) {
+              res = await fetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-check", {
+                headers: authHeaders(),
+                signal: controller.signal
+              });
+            }
+          }
           clearTimeout(timeoutId);
           if (!res.ok) {
             const text = await res.text();
