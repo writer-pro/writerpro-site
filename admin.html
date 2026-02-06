@@ -172,6 +172,35 @@
       function hasSessionToken() {
         return !!(session && session.access_token);
       }
+      async function refreshSession() {
+        if (!session || !session.refresh_token) return false;
+        try {
+          const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY },
+            body: JSON.stringify({ refresh_token: session.refresh_token })
+          });
+          if (!res.ok) return false;
+          const next = await res.json();
+          if (!next || !next.access_token) return false;
+          session = next;
+          const serialized = JSON.stringify(next);
+          localStorage.setItem("wp_session", serialized);
+          sessionStorage.setItem("wp_session", serialized);
+          window.name = `wp_session:${serialized}`;
+          return true;
+        } catch {
+          return false;
+        }
+      }
+
+      async function ensureSessionReady() {
+        if (hasSessionToken()) return true;
+        if (session && session.refresh_token) {
+          return await refreshSession();
+        }
+        return false;
+      }
       function getPasskey() {
         return (localStorage.getItem("wp_admin_passkey") || "").trim();
       }
@@ -199,7 +228,8 @@
         accessStatusEl.textContent = "Checking access...";
         checkEl.disabled = true;
         setAdminUnlocked(false);
-        if (!hasSessionToken()) {
+        const ready = await ensureSessionReady();
+        if (!ready) {
           window.location.href = "app.html?next=admin.html";
           checkEl.disabled = false;
           return false;
