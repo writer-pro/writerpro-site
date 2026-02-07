@@ -28,9 +28,9 @@
         </div>
       </nav>
 
-      <div class="hero-grid">
+      <div class="hero-grid hero-grid-wide">
         <div class="hero-copy">
-          <h1>WriterPro</h1>
+          <h1 class="moving-gradient">WriterPro</h1>
           <p class="subtitle">
             Turn your finished work into a natural typing session. macOS only.
           </p>
@@ -41,7 +41,7 @@
             <a class="btn btn-primary btn-lg page-link" href="download.html">GET WRITER PRO</a>
             <a class="btn btn-outline btn-lg" href="#demo">WATCH DEMO</a>
           </div>
-          <div class="hero-stats">
+          <div class="hero-stats hero-stats-large">
             <div class="stat">
               <div class="stat-num">FROM</div>
               <div class="stat-label">$4.99 CAD / mo</div>
@@ -365,19 +365,24 @@
       }, { threshold: 0.18, rootMargin: "0px 0px -10% 0px" });
       revealTargets.forEach((el) => observer.observe(el));
 
-      const demoTitle = "The Case for Rest";
-      const demoMeta = "Grade 11 • Review: Medium • 1,200 words";
+      const demoTitle = "How Rest Fuels Better Work";
+      const demoMeta = "Grade 11 • Review: Heavy • 1,450 words • Humanize: On";
       const demoLines = [
-        "Rest is not the opposite of productivity. It is the condition that makes focus possible.",
-        "Writer Pro builds a clear outline, then types with human timing so the draft feels natural.",
-        "First, it sets a thesis. Then it structures supporting points with gentle transitions.",
+        "Rest is not the opposite of productivity—it is the condition that makes focus possible.",
+        "When students plan for rest, their writing improves because attention returns sharper.",
+        "WriterPro mirrors this rhythm: outline, draft, pause, refine.",
         "",
-        "In modern school culture, rest is often framed as a reward rather than a requirement.",
-        "But cognitive research shows that memory consolidation and creative insight require downtime.",
-        "Short breaks reduce mental fatigue, which makes revision sharper and more accurate.",
+        "The workflow starts with a clear thesis and three supporting points.",
+        "Topic sentences arrive first, then evidence, then a short transition.",
+        "Small pauses are intentional—like a student thinking between sentences.",
         "",
-        "Writer Pro mirrors this logic in its workflow: outline, draft, pause, refine.",
-        "The result is a polished essay that reads like a real student—not a template."
+        "In practice, rest resets working memory and reduces cognitive drift.",
+        "That makes revision cleaner: fewer repeats, better word choice, smoother flow.",
+        "",
+        "WriterPro keeps the tone consistent while still typing in a human cadence.",
+        "You can see the pauses, the occasional correction, and the natural pacing.",
+        "",
+        "The result is a polished draft that reads like a real student—not a template."
       ];
 
       function startDemoTyping() {
@@ -392,7 +397,10 @@
           el.textContent = demoLines.join("\n");
           return;
         }
-        const speed = 18;
+        const speed = 16;
+        const linePause = 300;
+        const paragraphPause = 520;
+        const sentencePause = 140;
         let line = 0;
         let charIndex = 0;
 
@@ -413,9 +421,12 @@
         function typeBody() {
           const current = demoLines[line];
           if (charIndex < current.length) {
-            el.textContent += current.charAt(charIndex);
+            const nextChar = current.charAt(charIndex);
+            el.textContent += nextChar;
             charIndex += 1;
-            setTimeout(typeBody, speed);
+            const isSentenceEnd = nextChar === "." || nextChar === "!" || nextChar === "?";
+            const jitter = Math.random() * 12;
+            setTimeout(typeBody, speed + jitter + (isSentenceEnd ? sentencePause : 0));
             return;
           }
           el.textContent += "\n";
@@ -431,7 +442,7 @@
               startDemoTyping();
             }, 2600);
           } else {
-            setTimeout(typeBody, current.length > 0 ? 280 : 520);
+            setTimeout(typeBody, current.length > 0 ? linePause : paragraphPause);
           }
         }
 

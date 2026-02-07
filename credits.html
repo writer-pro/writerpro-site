@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="favicon-512.png">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Writer Pro — Earn Credits</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="legal-page page-enter">
+    <header class="hero legal-hero">
+      <nav class="nav">
+        <a class="logo" href="index.html">WRITER PRO</a>
+        <div class="nav-actions">
+          <a class="btn btn-outline page-link" href="index.html">HOME</a>
+          <a class="btn btn-outline page-link" href="billing.html">BILLING</a>
+          <a class="btn btn-outline page-link" href="support.html">SUPPORT</a>
+        </div>
+      </nav>
+      <div class="hero-grid legal-hero-grid">
+        <div class="hero-copy legal-hero-copy">
+          <h1>EARN CREDITS</h1>
+          <p class="subtitle">Follow the steps below to earn credits. We’ll add the visual guide next.</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="legal-shell">
+        <div class="legal-card">
+          <h2>Earn credits (guide)</h2>
+          <p class="subtle">Follow these steps to earn credits. We’ll add screenshots and videos next.</p>
+          <div class="legal-note">Credits apply automatically to your account after completion.</div>
+        </div>
+
+        <div class="legal-card">
+          <h2>Step‑by‑step</h2>
+          <div class="step-list">
+            <div class="step-row">
+              <div class="step-index">1</div>
+              <div class="step-body">
+                <h3>Sign in</h3>
+                <p>Make sure you’re logged in with the account you want to credit.</p>
+                <div class="step-media">Screenshot placeholder</div>
+              </div>
+            </div>
+            <div class="step-row">
+              <div class="step-index">2</div>
+              <div class="step-body">
+                <h3>Open the earn credits flow</h3>
+                <p>Follow the on‑screen steps to earn credits.</p>
+                <div class="step-media">Screenshot placeholder</div>
+              </div>
+            </div>
+            <div class="step-row">
+              <div class="step-index">3</div>
+              <div class="step-body">
+                <h3>Complete the steps</h3>
+                <p>Finish the offer or tutorial steps. Credits are added automatically.</p>
+                <div class="step-media">Screenshot placeholder</div>
+              </div>
+            </div>
+            <div class="step-row">
+              <div class="step-index">4</div>
+              <div class="step-body">
+                <h3>Confirm credits</h3>
+                <p>Return to billing to verify the updated balance.</p>
+                <div class="step-media">Screenshot placeholder</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="legal-card">
+          <h2>Help</h2>
+          <ul class="legal-list">
+            <li>If credits don’t appear, refresh the billing page.</li>
+            <li>Most credits post within a few minutes.</li>
+            <li>Contact support if a credit is missing after 24 hours.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <span>© 2026 WriterPro</span>
+        <div class="footer-links">
+          <a href="terms.html">Terms</a>
+          <a href="privacy.html">Privacy</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      function navigateWithFade(url) {
+        document.body.classList.add("page-exit");
+        setTimeout(() => { window.location.href = url; }, 240);
+      }
+      document.querySelectorAll(".page-link").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          const href = link.getAttribute("href") || "";
+          if (href.startsWith("#")) return;
+          event.preventDefault();
+          navigateWithFade(href);
+        });
+      });
+    </script>
+  </body>
+</html>

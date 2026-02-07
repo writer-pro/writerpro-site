@@ -94,24 +94,6 @@
           </div>
         </div>
 
-        <div class="card span-2">
-          <h3>ACCOUNT DETAILS</h3>
-          <p class="subtle">Update your email and password securely.</p>
-          <div class="form-stack">
-            <input class="input" id="account-email" type="email" placeholder="Account email" />
-            <button class="btn btn-outline" id="toggle-password">Change Password</button>
-            <div class="form-stack is-hidden" id="password-panel">
-              <div class="two-col">
-                <input class="input" id="current-password" type="password" placeholder="Current password" autocomplete="current-password" />
-                <input class="input" id="new-password" type="password" placeholder="New password" autocomplete="new-password" />
-              </div>
-              <input class="input" id="confirm-password" type="password" placeholder="Confirm new password" autocomplete="new-password" />
-            </div>
-            <button class="btn btn-primary" id="settings-save">Save Account Changes</button>
-            <p class="notice" id="settings-status"></p>
-          </div>
-        </div>
-
         <div class="card span-2" id="redeem-card">
           <h3>REDEEM A CODE</h3>
           <p class="subtle">Each Linkvertise code = 0.1 credit. Reach 10/10 to earn +1 credit.</p>
@@ -128,6 +110,24 @@
             <input class="input" id="redeem-code" type="text" placeholder="Enter code (example: ABCD1234EFGH)" autocomplete="one-time-code" />
             <button class="btn btn-primary" id="redeem-submit" type="button">Redeem</button>
             <p class="notice" id="redeem-status"></p>
+          </div>
+        </div>
+
+        <div class="card span-2">
+          <h3>ACCOUNT DETAILS</h3>
+          <p class="subtle">Update your email and password securely.</p>
+          <div class="form-stack">
+            <input class="input" id="account-email" type="email" placeholder="Account email" />
+            <button class="btn btn-outline" id="toggle-password">Change Password</button>
+            <div class="form-stack is-hidden" id="password-panel">
+              <div class="two-col">
+                <input class="input" id="current-password" type="password" placeholder="Current password" autocomplete="current-password" />
+                <input class="input" id="new-password" type="password" placeholder="New password" autocomplete="new-password" />
+              </div>
+              <input class="input" id="confirm-password" type="password" placeholder="Confirm new password" autocomplete="new-password" />
+            </div>
+            <button class="btn btn-primary" id="settings-save">Save Account Changes</button>
+            <p class="notice" id="settings-status"></p>
           </div>
         </div>
 
@@ -696,6 +696,7 @@
           authState.textContent = "Not signed in. Sign in to continue.";
           markRequestedPack();
           billingStatus.textContent = "Sign in to manage credits.";
+          navigateWithFade("app.html?next=billing.html&signed_out=1");
           return;
         }
 
@@ -704,6 +705,7 @@
           setBillingLocked(true);
           authState.textContent = "Session expired. Please sign in again.";
           billingStatus.textContent = "Session expired. Please sign in again.";
+          navigateWithFade("app.html?next=billing.html&signed_out=1");
           return;
         }
 
