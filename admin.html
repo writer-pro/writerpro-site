@@ -147,6 +147,19 @@
             </div>
 
             <div class="admin-section-card">
+              <div class="admin-section-title">Unlimited Pass</div>
+              <div class="form-stack admin-form-stack">
+                <input class="input" id="admin-pass-expires" type="datetime-local" />
+                <div class="two-col">
+                  <input class="input" id="admin-pass-add-hours" type="number" placeholder="Add hours" />
+                  <input class="input" id="admin-pass-remove-hours" type="number" placeholder="Remove hours" />
+                </div>
+                <button class="btn btn-outline" id="admin-pass-clear">Clear Pass</button>
+                <p class="subtle" id="admin-pass-preview">Current expiry: —</p>
+              </div>
+            </div>
+
+            <div class="admin-section-card">
               <div class="admin-section-title">Referral</div>
               <div class="form-stack admin-form-stack">
                 <input class="input" id="admin-referral-code-set" type="text" placeholder="Set referral code (unique)" />
@@ -253,6 +266,11 @@
       const setEl = document.getElementById("admin-credits-set");
       const referralCodeSetEl = document.getElementById("admin-referral-code-set");
       const tierEl = document.getElementById("admin-tier");
+      const passExpiresEl = document.getElementById("admin-pass-expires");
+      const passAddEl = document.getElementById("admin-pass-add-hours");
+      const passRemoveEl = document.getElementById("admin-pass-remove-hours");
+      const passClearEl = document.getElementById("admin-pass-clear");
+      const passPreviewEl = document.getElementById("admin-pass-preview");
       const adminToggleEl = document.getElementById("admin-is-admin");
       const passEl = document.getElementById("admin-password");
       const passConfirmEl = document.getElementById("admin-password-confirm");
@@ -458,6 +476,12 @@
         if (userAdminEl) userAdminEl.textContent = data.is_admin ? "Yes" : "No";
         if (userReferralCodeEl) userReferralCodeEl.textContent = data.referral_code || "—";
         if (userReferralUsesEl) userReferralUsesEl.textContent = typeof data.referral_uses_count === "number" ? data.referral_uses_count.toString() : "—";
+        if (passPreviewEl) {
+          passPreviewEl.textContent = data.access_expires_at ? `Current expiry: ${new Date(data.access_expires_at).toLocaleString()}` : "Current expiry: —";
+        }
+        if (passExpiresEl) {
+          passExpiresEl.value = data.access_expires_at ? new Date(data.access_expires_at).toISOString().slice(0, 16) : "";
+        }
         if (referralUsesListEl) {
           if (Array.isArray(data.referral_uses_emails) && data.referral_uses_emails.length) {
             referralUsesListEl.innerHTML = data.referral_uses_emails.map((email) => `<div class="referral-item">${email}</div>`).join("");
@@ -488,6 +512,8 @@
         adminToggleEl.checked = !!data.is_admin;
         passEl.value = "";
         passConfirmEl.value = "";
+        if (passAddEl) passAddEl.value = "";
+        if (passRemoveEl) passRemoveEl.value = "";
         if (purchasePackEl) purchasePackEl.value = "";
         if (purchaseCreditsEl) purchaseCreditsEl.value = "";
         if (purchaseAmountEl) purchaseAmountEl.value = "";
@@ -541,6 +567,13 @@
         if (emailSet) payload.email_set = emailSet;
         const referralSet = (referralCodeSetEl.value || "").trim();
         if (referralSet) payload.referral_code_set = referralSet;
+        if (passExpiresEl && passExpiresEl.value) {
+          payload.access_expires_at_set = new Date(passExpiresEl.value).toISOString();
+        }
+        const addHours = parseFloat(passAddEl && passAddEl.value ? passAddEl.value : "");
+        const removeHours = parseFloat(passRemoveEl && passRemoveEl.value ? passRemoveEl.value : "");
+        if (!Number.isNaN(addHours)) payload.access_expires_add_hours = addHours;
+        if (!Number.isNaN(removeHours)) payload.access_expires_remove_hours = removeHours;
         const pass = (passEl.value || "").trim();
         if (pass) {
           if (pass !== (passConfirmEl.value || "").trim()) {
@@ -620,6 +653,9 @@
         adminToggleEl.checked = false;
         passEl.value = "";
         passConfirmEl.value = "";
+        if (passExpiresEl) passExpiresEl.value = "";
+        if (passAddEl) passAddEl.value = "";
+        if (passRemoveEl) passRemoveEl.value = "";
         statusEl.textContent = "";
         if (purchaseCreditsEl) purchaseCreditsEl.value = "";
         if (purchaseAmountEl) purchaseAmountEl.value = "";
@@ -699,6 +735,37 @@
       if (purchaseAddEl) purchaseAddEl.addEventListener("click", addPurchase);
       if (adminCodeCreateEl) adminCodeCreateEl.addEventListener("click", createCreditCode);
       if (adminCodeCopyEl) adminCodeCopyEl.addEventListener("click", copyCreditCode);
+      if (passClearEl) {
+        passClearEl.addEventListener("click", async () => {
+          if (!adminUnlocked) {
+            accessStatusEl.textContent = "Verify access first.";
+            return;
+          }
+          const email = (emailEl.value || "").trim().toLowerCase();
+          if (!email) {
+            statusEl.textContent = "Load a user before clearing the pass.";
+            return;
+          }
+          statusEl.textContent = "Clearing pass...";
+          try {
+            const res = await fetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-update-user", {
+              method: "POST",
+              headers: authHeaders({ "Content-Type": "application/json" }),
+              body: JSON.stringify({ email, access_expires_clear: true })
+            });
+            const text = await res.text();
+            if (!res.ok) {
+              statusEl.textContent = `Clear failed: ${text}`;
+              return;
+            }
+            const data = JSON.parse(text);
+            statusEl.textContent = "Unlimited pass cleared.";
+            setUserDetails(data);
+          } catch (err) {
+            statusEl.textContent = `Clear failed: ${err.message || "network error"}`;
+          }
+        });
+      }
 
       ingestSessionFromHash();
       loadSession();
