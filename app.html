@@ -436,6 +436,23 @@
         }
       }
 
+      async function validateSession() {
+        if (!hasSessionToken()) return false;
+        try {
+          const res = await supabaseRequest("/auth/v1/user", { method: "GET" });
+          if (res && res.ok) return true;
+          if (res && res.status === 401) {
+            const refreshed = await refreshSession();
+            if (!refreshed) return false;
+            const retry = await supabaseRequest("/auth/v1/user", { method: "GET" });
+            return !!(retry && retry.ok);
+          }
+          return false;
+        } catch {
+          return false;
+        }
+      }
+
       function setAuthLoading(isLoading) {
         authSpinner.classList.toggle("active", isLoading);
         loginBtn.classList.toggle("is-loading", isLoading);
@@ -1058,6 +1075,7 @@
       const params = new URLSearchParams(window.location.search);
       if (params.get("signed_out") === "1") {
         authStatus.textContent = "Signed out. Please sign in again.";
+        clearSession();
       }
       if (params.get("skip_onboarding") === "1") {
         setSkipOnboarding(true);
@@ -1071,7 +1089,15 @@
         authStatus.textContent = "Setup complete. Please sign in.";
       }
       if (hasSessionToken()) {
-        afterAuthSuccess();
+        (async () => {
+          const ok = await validateSession();
+          if (!ok) {
+            clearSession();
+            authStatus.textContent = "Session expired. Please sign in again.";
+            return;
+          }
+          afterAuthSuccess();
+        })();
       }
     </script>
   </body>
