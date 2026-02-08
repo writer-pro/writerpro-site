@@ -542,7 +542,7 @@
         }
         const user = await userRes.json();
         const email = user ? user.email : "";
-        const res = await supabaseRequest(`/rest/v1/profiles?select=credits,email,is_admin,referral_code,bonus_tenths,access_expires_at,purchase_history,credit_history&email=eq.${encodeURIComponent(email)}`, {
+        const res = await supabaseRequest(`/rest/v1/profiles?select=credits,email,is_admin,referral_code,bonus_tenths,access_expires_at&email=eq.${encodeURIComponent(email)}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" }
         });
@@ -557,11 +557,34 @@
         const bonusTenths = typeof record.bonus_tenths === "number" ? record.bonus_tenths : 0;
         creditsEl.textContent = `Balance: ${nextCredits}`;
         if (referralCodeEl) referralCodeEl.textContent = referralCode;
-        renderPurchaseHistory(record.purchase_history);
-        renderCreditHistory(record.credit_history);
+        renderPurchaseHistory([]);
+        renderCreditHistory([]);
         updatePassStatus(record.access_expires_at);
         billingStatus.textContent = "";
         updateRedeemProgress(bonusTenths);
+        const userId = user && user.id ? user.id : "";
+        if (userId) {
+          try {
+            const purchaseRes = await supabaseRequest(`/rest/v1/purchase_history?select=pack_id,credits,amount_cents,currency,status,created_at&user_id=eq.${encodeURIComponent(userId)}&order=created_at.desc`, {
+              method: "GET",
+              headers: { "Content-Type": "application/json" }
+            });
+            if (purchaseRes.ok) {
+              const purchaseData = await purchaseRes.json();
+              renderPurchaseHistory(purchaseData);
+            }
+          } catch {}
+          try {
+            const creditRes = await supabaseRequest(`/rest/v1/credit_history?select=type,amount,reason,created_at&user_id=eq.${encodeURIComponent(userId)}&order=created_at.desc`, {
+              method: "GET",
+              headers: { "Content-Type": "application/json" }
+            });
+            if (creditRes.ok) {
+              const creditData = await creditRes.json();
+              renderCreditHistory(creditData);
+            }
+          } catch {}
+        }
       }
 
       function updatePassStatus(expiresAt) {
