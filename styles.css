@@ -736,8 +736,8 @@ a {
 
 .referral-code {
   font-weight: 600;
-  font-size: 13px;
-  letter-spacing: 0.2em;
+  font-size: 16px;
+  letter-spacing: 0.14em;
   color: var(--text);
 }
 
@@ -1718,15 +1718,197 @@ body.reduced-motion * {
 }
 
 .step-media {
-  height: 180px;
-  border-radius: 12px;
-  border: 1px dashed rgba(255, 255, 255, 0.18);
-  background: rgba(10, 14, 22, 0.6);
+  min-height: 180px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    radial-gradient(120% 120% at 18% 0%, rgba(79, 139, 255, 0.14), transparent 56%),
+    radial-gradient(120% 120% at 82% 100%, rgba(101, 255, 193, 0.12), transparent 54%),
+    rgba(10, 14, 22, 0.55);
   color: var(--text-subtle);
+  display: block;
+  padding: 12px;
+  overflow: hidden;
+}
+
+.step-media .mock-window {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(8, 11, 18, 0.78);
+  overflow: hidden;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+}
+
+.step-media .mock-topbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.step-media .mock-dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.step-media .mock-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.step-media .mock-dot.red { background: rgba(255, 99, 99, 0.9); }
+.step-media .mock-dot.yellow { background: rgba(255, 206, 71, 0.92); }
+.step-media .mock-dot.green { background: rgba(76, 217, 100, 0.92); }
+
+.step-media .mock-title {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.step-media .mock-content {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.step-media .mock-row {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.step-media .mock-row.sm { width: 58%; }
+.step-media .mock-row.md { width: 78%; }
+.step-media .mock-row.lg { width: 94%; }
+.step-media .mock-row.xs { width: 42%; }
+
+.step-media .mock-grid-2 {
+  display: grid;
+  grid-template-columns: 1.05fr 1.95fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.step-media .mock-panel {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.step-media .mock-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 12px;
+  color: rgba(233, 237, 245, 0.9);
+  width: fit-content;
+}
+
+.step-media .mock-pill .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+}
+.step-media .mock-pill.active {
+  border-color: rgba(79, 139, 255, 0.55);
+  background: rgba(79, 139, 255, 0.16);
+}
+.step-media .mock-pill.active .dot { background: rgba(79, 139, 255, 0.95); }
+
+.step-media .mock-input {
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.step-media .mock-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.step-media .mock-button {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  font-size: 13px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(233, 237, 245, 0.92);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.step-media .mock-button.primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+}
+
+.step-media .mock-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  font-size: 12px;
+  color: rgba(233, 237, 245, 0.92);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.step-media .mock-progress {
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.step-media .mock-progress > span {
+  display: block;
+  height: 100%;
+  width: 55%;
+  background: linear-gradient(90deg, rgba(79, 139, 255, 0.95), rgba(101, 255, 193, 0.95));
+}
+
+.step-media .mock-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 7px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(233, 237, 245, 0.86);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 @media (max-width: 720px) {
