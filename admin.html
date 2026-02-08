@@ -176,10 +176,16 @@
                 </div>
                 <div class="two-col">
                   <input class="input" id="admin-purchase-amount" type="number" placeholder="Amount (cents)" />
-                  <input class="input" id="admin-purchase-currency" type="text" placeholder="Currency (usd)" />
+                  <select class="input" id="admin-purchase-currency">
+                    <option value="usd">USD</option>
+                    <option value="cad">CAD</option>
+                  </select>
                 </div>
                 <div class="two-col">
-                  <input class="input" id="admin-purchase-status" type="text" placeholder="Status (paid)" />
+                  <select class="input" id="admin-purchase-status">
+                    <option value="paid">Paid</option>
+                    <option value="unpaid">Unpaid</option>
+                  </select>
                   <button class="btn btn-outline" id="admin-purchase-add">Add Purchase</button>
                 </div>
               </div>
