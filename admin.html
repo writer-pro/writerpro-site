@@ -46,15 +46,13 @@
               <p class="notice" id="admin-access-status"></p>
             </div>
 
-            <div id="admin-content">
-              <div class="admin-panel">
-                <h3>Lookup</h3>
-                <p class="subtle">Find an account by email.</p>
-                <div class="form-stack">
+            <div id="admin-content" style="display:none;">
+              <div class="admin-panel admin-search-panel">
+                <h3>Search by Email</h3>
+                <p class="subtle">Enter a user email to load their account.</p>
+                <div class="input-group">
                   <input class="input" id="admin-search-email" type="email" placeholder="user@email.com" />
-                  <div class="cta-row">
-                    <button class="btn btn-primary" id="admin-search">Search User</button>
-                  </div>
+                  <button class="btn btn-primary" id="admin-search">Search</button>
                 </div>
                 <p class="notice" id="admin-search-status"></p>
               </div>
@@ -296,11 +294,9 @@
         adminUnlocked = value;
         document.body.classList.toggle("admin-locked", !value);
         if (loginPanelEl) loginPanelEl.style.display = value ? "none" : "block";
-        if (adminContentEl) adminContentEl.style.opacity = value ? "1" : "0.5";
-        if (adminContentWideEl) adminContentWideEl.style.opacity = value ? "1" : "0.5";
-        if (adminCodePanelEl) adminCodePanelEl.style.opacity = value ? "1" : "0.5";
-        if (searchEl) searchEl.disabled = !value;
-        if (searchEmailEl) searchEmailEl.disabled = !value;
+        if (adminContentEl) adminContentEl.style.display = value ? "block" : "none";
+        if (adminContentWideEl) adminContentWideEl.style.display = value ? "block" : "none";
+        if (adminCodePanelEl) adminCodePanelEl.style.display = value ? "block" : "none";
       }
 
       let session = null;
