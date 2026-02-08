@@ -26,7 +26,7 @@
     <section class="section">
       <div class="card">
         <h3>Verify & Redeem</h3>
-        <p class="subtle" id="redeem-status">Waiting for Linkvertise verification…</p>
+          <p class="subtle" id="redeem-status">Waiting for your code…</p>
         <div class="form-stack" style="margin-top: 12px;">
           <div class="input-group">
             <input class="input" id="redeem-code" type="text" readonly placeholder="Your code will appear here" />
@@ -61,12 +61,32 @@
         });
       });
 
+      function showCode(code) {
+        statusEl.textContent = "Your code is ready.";
+        codeEl.value = code;
+        billingBtn.setAttribute("href", `billing.html?redeem=${encodeURIComponent(code)}`);
+      }
+
+      function showError(message) {
+        statusEl.textContent = "Something went wrong.";
+        detailEl.textContent = message || "Please complete the Linkvertise step again.";
+      }
+
       async function verify() {
         const params = new URLSearchParams(window.location.search);
+        const codeParam = (params.get("code") || "").trim();
+        const errorParam = (params.get("error") || "").trim();
         const hash = (params.get("hash") || "").trim();
+        if (codeParam) {
+          showCode(codeParam);
+          return;
+        }
+        if (errorParam) {
+          showError(errorParam);
+          return;
+        }
         if (!hash) {
-          statusEl.textContent = "Missing Linkvertise hash.";
-          detailEl.textContent = "Please complete the Linkvertise step again.";
+          showError("Missing verification details. Please complete the Linkvertise step again.");
           return;
         }
         statusEl.textContent = "Verifying unlock…";
@@ -78,21 +98,17 @@
           });
           const text = await res.text();
           if (!res.ok) {
-            statusEl.textContent = "Unlock expired or invalid.";
-            detailEl.textContent = text || "Please complete the Linkvertise step again.";
+            showError(text || "Unlock expired or invalid. Please complete Linkvertise again.");
             return;
           }
           const payload = JSON.parse(text);
           if (!payload || !payload.code) {
-            statusEl.textContent = "Unlock verified, but no code received.";
+            showError("Unlock verified, but no code received.");
             return;
           }
-          statusEl.textContent = "Unlocked. Copy your code below.";
-          codeEl.value = payload.code;
-          billingBtn.setAttribute("href", `billing.html?redeem=${encodeURIComponent(payload.code)}`);
+          showCode(payload.code);
         } catch (err) {
-          statusEl.textContent = "Verification failed.";
-          detailEl.textContent = err?.message || "Network error.";
+          showError(err?.message || "Network error.");
         }
       }
 
