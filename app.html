@@ -1102,33 +1102,3 @@
     </script>
   </body>
 </html>
-      function readCookie(name) {
-        try {
-          const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-          return match ? decodeURIComponent(match[2]) : null;
-        } catch {
-          return null;
-        }
-      }
-
-      function writeCookie(name, value, days) {
-        try {
-          const expires = new Date();
-          expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-          document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
-        } catch {}
-      }
-
-      function getSignupLimitDay() {
-        let stored = null;
-        try { stored = localStorage.getItem(signupLimitKey); } catch {}
-        if (!stored) {
-          stored = readCookie(signupCookieName);
-        }
-        return stored;
-      }
-
-      function setSignupLimitDay(day) {
-        try { localStorage.setItem(signupLimitKey, day); } catch {}
-        writeCookie(signupCookieName, day, 2);
-      }
