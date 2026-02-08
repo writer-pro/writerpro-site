@@ -32,7 +32,7 @@
     <section class="section">
       <div class="admin-shell">
         <div class="admin-grid">
-          <div class="admin-sidebar">
+          <div class="admin-sidebar" id="admin-login-panel">
             <div class="admin-panel admin-access-panel">
               <h3>Access</h3>
               <p class="subtle">Admin session + passkey are required.</p>
@@ -72,7 +72,7 @@
           </div>
         </div>
 
-        <div class="admin-panel admin-panel-wide" id="admin-content-wide">
+        <div class="admin-panel admin-panel-wide" id="admin-content-wide" style="display:none;">
           <div class="admin-panel-head">
             <div>
               <h3>User Details</h3>
@@ -212,7 +212,7 @@
           <p class="notice" id="admin-status"></p>
         </div>
 
-        <div class="admin-panel admin-panel-wide" id="admin-code-panel">
+        <div class="admin-panel admin-panel-wide" id="admin-code-panel" style="display:none;">
           <div class="admin-panel-head">
             <div>
               <h3>Generate Credit Code</h3>
@@ -249,6 +249,9 @@
       const checkEl = document.getElementById("admin-check");
       const searchEmailEl = document.getElementById("admin-search-email");
       const searchEl = document.getElementById("admin-search");
+      const loginPanelEl = document.getElementById("admin-login-panel");
+      const adminContentWideEl = document.getElementById("admin-content-wide");
+      const adminCodePanelEl = document.getElementById("admin-code-panel");
 
       const userIdEl = document.getElementById("admin-user-id");
       const userEmailEl = document.getElementById("admin-user-email");
@@ -294,6 +297,9 @@
       function setAdminUnlocked(value) {
         adminUnlocked = value;
         document.body.classList.toggle("admin-locked", !value);
+        if (loginPanelEl) loginPanelEl.style.display = value ? "none" : "block";
+        if (adminContentWideEl) adminContentWideEl.style.display = value ? "block" : "none";
+        if (adminCodePanelEl) adminCodePanelEl.style.display = value ? "block" : "none";
       }
 
       let session = null;
