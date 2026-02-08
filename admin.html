@@ -46,7 +46,7 @@
               <p class="notice" id="admin-access-status"></p>
             </div>
 
-            <div id="admin-content">
+            <div id="admin-content" style="display:none;">
               <div class="admin-panel">
                 <h3>Lookup</h3>
                 <p class="subtle">Find an account by email.</p>
@@ -249,6 +249,7 @@
       const checkEl = document.getElementById("admin-check");
       const searchEmailEl = document.getElementById("admin-search-email");
       const searchEl = document.getElementById("admin-search");
+      const adminContentEl = document.getElementById("admin-content");
       const loginPanelEl = document.getElementById("admin-login-panel");
       const adminContentWideEl = document.getElementById("admin-content-wide");
       const adminCodePanelEl = document.getElementById("admin-code-panel");
@@ -298,6 +299,7 @@
         adminUnlocked = value;
         document.body.classList.toggle("admin-locked", !value);
         if (loginPanelEl) loginPanelEl.style.display = value ? "none" : "block";
+        if (adminContentEl) adminContentEl.style.display = value ? "block" : "none";
         if (adminContentWideEl) adminContentWideEl.style.display = value ? "block" : "none";
         if (adminCodePanelEl) adminCodePanelEl.style.display = value ? "block" : "none";
       }
@@ -736,6 +738,14 @@
 
       checkEl.addEventListener("click", ensureAdmin);
       searchEl.addEventListener("click", searchUser);
+      if (searchEmailEl) {
+        searchEmailEl.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            searchUser();
+          }
+        });
+      }
       submitEl.addEventListener("click", submitUpdate);
       resetEl.addEventListener("click", resetForm);
       if (purchaseAddEl) purchaseAddEl.addEventListener("click", addPurchase);
