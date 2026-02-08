@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" sizes="512x512" href="favicon-512.png">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Writer Pro — Earn Credits</title>
+    <title>Writer Pro — Referral Credits</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="legal-page page-enter">
@@ -23,8 +23,8 @@
       </nav>
       <div class="hero-grid legal-hero-grid">
         <div class="hero-copy legal-hero-copy">
-          <h1>EARN CREDITS</h1>
-          <p class="subtitle">Follow the steps below to earn credits with a one‑time code.</p>
+          <h1>REFERRAL CREDITS</h1>
+          <p class="subtitle">Share your referral code and earn bonus credits.</p>
         </div>
       </div>
     </header>
@@ -32,26 +32,33 @@
     <section class="section">
       <div class="legal-shell">
         <div class="legal-card">
-          <h2>Referral credits</h2>
-          <p class="subtle">Share your referral code. New users get +5 credits, and you get +5 credits for every signup.</p>
+          <h2>How it works</h2>
+          <ul class="legal-list">
+            <li>Every new account starts with <strong>5 credits</strong>.</li>
+            <li>If a new user enters a valid referral code during signup, they get <strong>+5 credits</strong>.</li>
+            <li>You get <strong>+5 credits</strong> every time a new user uses your referral code.</li>
+            <li>Each account can apply a referral code only once (you can’t use your own).</li>
+          </ul>
+          <div class="legal-note">Share your referral code so new users can enter it during setup.</div>
+        </div>
+
+        <div class="legal-card">
+          <h2>Your referral code</h2>
+          <p class="subtle">Copy your referral code and share it with new users.</p>
           <div class="referral-row" style="margin-top: 12px;">
-            <div class="referral-label">Your referral code</div>
+            <div class="referral-label">Referral code</div>
             <div class="referral-box">
               <span class="referral-code" id="referral-code">—</span>
               <button class="btn btn-outline btn-small" id="copy-referral" type="button">Copy</button>
             </div>
           </div>
-          <div class="cta-row" style="margin-top: 12px;">
-            <a class="btn btn-outline page-link" href="referral.html" id="referral-how" style="white-space:nowrap;">How it works</a>
-            <a class="btn btn-primary page-link" href="app.html" id="referral-signin" style="display:none;white-space:nowrap;">Sign In</a>
+          <div class="form-stack" style="margin-top: 12px;">
+            <div class="cta-row" style="margin-top: 2px;">
+              <a class="btn btn-outline page-link" href="billing.html">Open Billing</a>
+            </div>
+            <a class="btn btn-outline page-link" href="app.html" id="referral-signin" style="display:none;">Sign In to Load Your Code</a>
+            <p class="notice" id="referral-status"></p>
           </div>
-          <p class="notice" id="referral-status"></p>
-        </div>
-
-        <div class="legal-card">
-          <h2>Earn credits (guide)</h2>
-          <p class="subtle">Complete an offer, receive a code, and redeem it in Billing.</p>
-          <div class="legal-note">Codes are one‑time and expire. Redeem quickly to avoid losing the credit.</div>
         </div>
 
         <div class="legal-card">
@@ -60,8 +67,8 @@
             <div class="step-row">
               <div class="step-index">1</div>
               <div class="step-body">
-                <h3>Sign in</h3>
-                <p>Sign in to the account you want to credit.</p>
+                <h3>Find your referral code</h3>
+                <p>Open Billing and look for “Referral code.”</p>
                 <div class="step-media">
                   <div class="mock-window">
                     <div class="mock-topbar">
@@ -70,55 +77,16 @@
                         <span class="mock-dot yellow"></span>
                         <span class="mock-dot green"></span>
                       </div>
-                      <div class="mock-title">Writer Pro • Sign In</div>
-                      <div style="width:22px;"></div>
-                    </div>
-                    <div class="mock-content">
-                      <div class="mock-row md"></div>
-                      <div class="mock-input"></div>
-                      <div class="mock-input"></div>
-                      <div class="mock-actions">
-                        <div class="mock-button primary">Sign In</div>
-                        <div class="mock-button">Create Account</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="step-row">
-              <div class="step-index">2</div>
-              <div class="step-body">
-                <h3>Open the earn credits flow</h3>
-                <p>Start the earn‑credits flow and complete the offer. When you finish, you’ll see a redemption code.</p>
-                <div class="step-media">
-                  <div class="mock-window">
-                    <div class="mock-topbar">
-                      <div class="mock-dots">
-                        <span class="mock-dot red"></span>
-                        <span class="mock-dot yellow"></span>
-                        <span class="mock-dot green"></span>
-                      </div>
-                      <div class="mock-title">Unlock • Earn Credits</div>
+                      <div class="mock-title">Billing • Referral Code</div>
                       <div style="width:22px;"></div>
                     </div>
                     <div class="mock-content">
                       <div class="mock-panel">
-                        <div class="mock-row lg"></div>
-                        <div class="mock-row sm"></div>
-                        <div class="mock-progress"><span></span></div>
-                      </div>
-                      <div class="mock-grid-2">
-                        <div class="mock-panel">
-                          <div class="mock-pill active"><span class="dot"></span> Step 1 complete</div>
-                          <div class="mock-pill"><span class="dot"></span> Step 2 in progress</div>
-                        </div>
-                        <div class="mock-panel">
-                          <div class="mock-row md"></div>
-                          <div class="mock-actions">
-                            <div class="mock-button primary">Continue</div>
-                            <div class="mock-button">Back</div>
-                          </div>
+                        <div class="mock-row md"></div>
+                        <div class="mock-code">ABCD12EFGH</div>
+                        <div class="mock-actions">
+                          <div class="mock-button primary">Copy</div>
+                          <div class="mock-button">Share</div>
                         </div>
                       </div>
                     </div>
@@ -126,11 +94,12 @@
                 </div>
               </div>
             </div>
+
             <div class="step-row">
-              <div class="step-index">3</div>
+              <div class="step-index">2</div>
               <div class="step-body">
-                <h3>Copy your redemption code</h3>
-                <p>Copy the code exactly as shown. Each code can only be used once.</p>
+                <h3>Share your referral code</h3>
+                <p>Send your referral code to a new user and ask them to enter it during setup.</p>
                 <div class="step-media">
                   <div class="mock-window">
                     <div class="mock-topbar">
@@ -139,27 +108,60 @@
                         <span class="mock-dot yellow"></span>
                         <span class="mock-dot green"></span>
                       </div>
-                      <div class="mock-title">Unlocked • Reward Code</div>
+                      <div class="mock-title">Referral Code</div>
                       <div style="width:22px;"></div>
                     </div>
                     <div class="mock-content">
                       <div class="mock-row sm"></div>
-                      <div class="mock-code">7CPV33LKXWLA</div>
+                      <div class="mock-code">ABCD12EFGH</div>
                       <div class="mock-actions">
-                        <div class="mock-button primary">Copy</div>
-                        <div class="mock-button">Open Billing</div>
+                        <div class="mock-button primary">Copy Code</div>
+                        <div class="mock-button">Send</div>
                       </div>
-                      <div class="mock-row xs"></div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+
+            <div class="step-row">
+              <div class="step-index">3</div>
+              <div class="step-body">
+                <h3>They create an account</h3>
+                <p>After signup, they’ll be asked for an optional referral code during setup.</p>
+                <div class="step-media">
+                  <div class="mock-window">
+                    <div class="mock-topbar">
+                      <div class="mock-dots">
+                        <span class="mock-dot red"></span>
+                        <span class="mock-dot yellow"></span>
+                        <span class="mock-dot green"></span>
+                      </div>
+                      <div class="mock-title">Create Account</div>
+                      <div style="width:22px;"></div>
+                    </div>
+                    <div class="mock-content">
+                      <div class="mock-input"></div>
+                      <div class="mock-input"></div>
+                      <div class="mock-actions">
+                        <div class="mock-button primary">Create Account</div>
+                        <div class="mock-button">Sign In</div>
+                      </div>
+                      <div class="mock-panel">
+                        <div class="mock-row xs"></div>
+                        <div class="mock-pill active"><span class="dot"></span> Referral code applied</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="step-row">
               <div class="step-index">4</div>
               <div class="step-body">
-                <h3>Redeem on Billing</h3>
-                <p>Go to Billing → “Redeem a code,” paste your code, and submit. Your balance updates immediately.</p>
+                <h3>Credits are added</h3>
+                <p>They get +5 credits, and you get +5 credits. Refresh Billing if it doesn’t update right away.</p>
                 <div class="step-media">
                   <div class="mock-window">
                     <div class="mock-topbar">
@@ -168,50 +170,19 @@
                         <span class="mock-dot yellow"></span>
                         <span class="mock-dot green"></span>
                       </div>
-                      <div class="mock-title">Billing • Redeem</div>
+                      <div class="mock-title">Billing • Balance</div>
                       <div style="width:22px;"></div>
                     </div>
                     <div class="mock-content">
                       <div class="mock-panel">
-                        <div class="mock-row md"></div>
-                        <div class="mock-progress"><span></span></div>
-                        <div class="mock-input"></div>
-                        <div class="mock-actions">
-                          <div class="mock-button primary">Redeem</div>
-                          <div class="mock-button">Refresh</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="step-row">
-              <div class="step-index">5</div>
-              <div class="step-body">
-                <h3>Check your balance</h3>
-                <p>If the balance doesn’t refresh, click “Refresh” on the Billing page.</p>
-                <div class="step-media">
-                  <div class="mock-window">
-                    <div class="mock-topbar">
-                      <div class="mock-dots">
-                        <span class="mock-dot red"></span>
-                        <span class="mock-dot yellow"></span>
-                        <span class="mock-dot green"></span>
-                      </div>
-                      <div class="mock-title">Billing • Account Status</div>
-                      <div style="width:22px;"></div>
-                    </div>
-                    <div class="mock-content">
-                      <div class="mock-panel">
-                        <div class="mock-pill active"><span class="dot"></span> Signed in</div>
-                        <div class="mock-row md"></div>
+                        <div class="mock-row sm"></div>
                         <div class="mock-row lg"></div>
                         <div class="mock-actions">
                           <div class="mock-button primary">Refresh Credits</div>
-                          <div class="mock-button">Support</div>
+                          <div class="mock-button">View History</div>
                         </div>
                       </div>
+                      <div class="mock-row md"></div>
                     </div>
                   </div>
                 </div>
@@ -221,13 +192,11 @@
         </div>
 
         <div class="legal-card">
-          <h2>Help</h2>
+          <h2>Notes</h2>
           <ul class="legal-list">
-            <li>Codes are not automatic—redeem them on the Billing page.</li>
-            <li>Each code can be used once and must match exactly.</li>
-            <li>If credits don’t appear, refresh the billing page.</li>
-            <li>Most credits post within a few minutes.</li>
-            <li>Contact support if a credit is missing after 24 hours.</li>
+            <li>Referral codes are permanent and unique per account.</li>
+            <li>Each account can apply a referral code once.</li>
+            <li>If a user is already signed in on that browser, sign out first before entering a referral code.</li>
           </ul>
         </div>
       </div>
@@ -328,7 +297,7 @@
 
         loadSession();
         if (!hasSessionToken()) {
-          referralStatus.textContent = "Sign in to view and copy your referral code.";
+          referralStatus.textContent = "Sign in to load your referral code.";
           referralSignIn.style.display = "inline-flex";
           return;
         }
@@ -363,6 +332,7 @@
         document.body.classList.add("page-exit");
         setTimeout(() => { window.location.href = url; }, 240);
       }
+
       document.querySelectorAll(".page-link").forEach((link) => {
         link.addEventListener("click", (event) => {
           const href = link.getAttribute("href") || "";
