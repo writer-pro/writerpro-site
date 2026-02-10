@@ -10,11 +10,11 @@
       <title>WriterPro 1.0</title>
       <sparkle:version>1</sparkle:version>
       <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
-      <pubDate>Sat, 07 Feb 2026 23:00:00 +0000</pubDate>
+      <pubDate>Tue, 10 Feb 2026 01:22:24 +0000</pubDate>
       <enclosure
         url="https://writer-pro.github.io/writerpro-site/WriterPro.dmg"
         sparkle:edSignature="REPLACE_WITH_SPARKLE_SIGNATURE"
-        length="4491983"
+        length="2901814"
         type="application/octet-stream" />
     </item>
   </channel>
