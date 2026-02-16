@@ -51,11 +51,11 @@
             <input class="input" id="email" type="email" placeholder="Email" autocomplete="email" />
             <input class="input" id="password" type="password" placeholder="Password" autocomplete="current-password" />
             <input class="input" id="password-confirm" type="password" placeholder="Confirm password" autocomplete="new-password" />
-            <button class="btn btn-primary" id="login">
+            <button class="btn btn-primary" id="login" type="button">
               <span>Sign In</span>
               <span class="mini-spinner" id="auth-spinner" aria-hidden="true"></span>
             </button>
-            <button class="btn btn-outline" id="signup">Create Account</button>
+            <button class="btn btn-outline" id="signup" type="button">Create Account</button>
             <p class="notice" id="auth-status"></p>
           </div>
         </div>
@@ -237,6 +237,41 @@
       const onboardingAnswers = {};
 
       let session = null;
+      function readCookie(name) {
+        try {
+          const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+          return match ? decodeURIComponent(match[2]) : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function writeCookie(name, value, days) {
+        try {
+          const expires = new Date();
+          expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+          document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+        } catch {}
+      }
+
+      function getSignupLimitDay() {
+        let stored = null;
+        try {
+          stored = localStorage.getItem(signupLimitKey);
+        } catch {}
+        if (!stored) {
+          stored = readCookie(signupCookieName);
+        }
+        return stored;
+      }
+
+      function setSignupLimitDay(day) {
+        try {
+          localStorage.setItem(signupLimitKey, day);
+        } catch {}
+        writeCookie(signupCookieName, day, 2);
+      }
+
       function parseHashSession() {
         const hash = window.location.hash || "";
         if (!hash || hash.length < 2) return;
@@ -398,24 +433,38 @@
         }
       }
 
+      function isTokenExpired() {
+        if (!session || !session.expires_at) return true;
+        const now = Math.floor(Date.now() / 1000);
+        return now >= (session.expires_at - 45);
+      }
+
       async function ensureSessionReady() {
         loadSession();
-        if (hasSessionToken()) return true;
+        if (hasSessionToken() && !isTokenExpired()) return true;
         if (getRefreshToken()) {
           return await refreshSession();
         }
         return false;
       }
 
-      function updateSessionUI() {
-        // Sign-in page should redirect if already signed in.
+      async function updateSessionUI() {
+        const ready = await ensureSessionReady();
+        if (!ready) return;
+        authStatus.textContent = "Signed in. Redirecting to dashboard...";
+        goToBilling();
       }
 
-      async function supabaseRequest(path, options) {
+      async function supabaseRequest(path, options = {}, allowRetry = true) {
         const headers = options.headers || {};
         headers["apikey"] = SUPABASE_ANON_KEY;
-        if (hasSessionToken()) headers["Authorization"] = `Bearer ${getAccessToken()}`;
-        return fetch(`${SUPABASE_URL}${path}`, { ...options, headers });
+        if (!options.skipAuth && hasSessionToken()) headers["Authorization"] = `Bearer ${getAccessToken()}`;
+        const res = await fetch(`${SUPABASE_URL}${path}`, { ...options, headers });
+        if (res.status === 401 && allowRetry && !options.skipAuth) {
+          const refreshed = await refreshSession();
+          if (refreshed) return supabaseRequest(path, options, false);
+        }
+        return res;
       }
 
       async function refreshSession() {
@@ -519,10 +568,12 @@
         setAuthLoading(true);
         authStatus.textContent = "Signing in...";
         try {
+          clearSession();
           const res = await supabaseRequest("/auth/v1/token?grant_type=password", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email, password }),
+            skipAuth: true
           });
           if (!res.ok) {
             let detail = "";
@@ -589,6 +640,7 @@
         setAuthLoading(true);
         authStatus.textContent = "Creating account...";
         try {
+          clearSession();
           const res = await supabaseRequest("/auth/v1/signup", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -596,7 +648,8 @@
               email,
               password,
               data: { first_name: firstName, last_name: lastName }
-            })
+            }),
+            skipAuth: true
           });
           let payload = null;
           try { payload = await res.json(); } catch {}
@@ -616,6 +669,8 @@
           } else {
             authStatus.textContent = "Account created. Check your email to confirm, then sign in.";
           }
+        } catch (error) {
+          authStatus.textContent = `Sign up failed: ${(error && error.message) || "network error"}`;
         } finally {
           setAuthLoading(false);
         }
@@ -823,7 +878,7 @@
             },
             body: JSON.stringify({ code })
           });
-          if (res.ok) {
+          if (res.ok || res.status === 409) {
             localStorage.removeItem("wp_referral_pending");
           }
         } catch {}
@@ -841,7 +896,7 @@
             },
             body: JSON.stringify({ code })
           });
-          if (res.ok) {
+          if (res.ok || res.status === 409) {
             localStorage.removeItem("wp_referral_pending");
             return { ok: true };
           }
@@ -857,6 +912,7 @@
 
       async function afterAuthSuccess() {
         await syncProfileFromAuth();
+        await applyReferralIfNeeded();
         const profile = await fetchProfile();
         const newSignup = localStorage.getItem("wp_new_signup") === "1";
         const userId = profile?.userId || "";
@@ -866,7 +922,6 @@
           localStorage.removeItem("wp_new_signup");
           setOnboardingUserId("");
           clearPendingOnboarding(identityKey);
-          await applyReferralIfNeeded();
           authStatus.textContent = "Signed in. Redirecting to dashboard...";
           goToBilling();
           return;
@@ -897,7 +952,6 @@
         if (profile && profile.onboarding_completed === false && hasOnboardingDoneFlag(identityKey)) {
           localStorage.removeItem("wp_new_signup");
           setOnboardingUserId("");
-          await applyReferralIfNeeded();
           authStatus.textContent = "Signed in. Redirecting to dashboard...";
           goToBilling();
           return;
@@ -1056,7 +1110,10 @@
         event.preventDefault();
         signIn();
       });
-      signupBtn.addEventListener("click", signUp);
+      signupBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        signUp();
+      });
       passwordEl.addEventListener("keydown", (event) => {
         if (event.key === "Enter") signIn();
       });
