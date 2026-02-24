@@ -865,31 +865,6 @@ a {
   min-height: 18px;
 }
 
-.auth-debug {
-  display: none;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-  color: color-mix(in srgb, var(--accent) 35%, #0b0f17);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  font-size: 11px;
-  line-height: 1.35;
-  word-break: break-word;
-}
-
-.auth-debug.is-error {
-  border-color: color-mix(in srgb, #d63638 70%, var(--border));
-  background: color-mix(in srgb, #d63638 12%, var(--surface));
-  color: #7a0f17;
-}
-
-.auth-debug.is-ok {
-  border-color: color-mix(in srgb, #1f8a4d 60%, var(--border));
-  background: color-mix(in srgb, #1f8a4d 12%, var(--surface));
-  color: #13542f;
-}
-
 .credit-balance {
   font-weight: 600;
   font-size: 22px;
