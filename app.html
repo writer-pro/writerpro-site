@@ -55,6 +55,7 @@
               <span>Sign In</span>
               <span class="mini-spinner" id="auth-spinner" aria-hidden="true"></span>
             </button>
+            <div class="auth-debug" id="auth-debug" role="status" aria-live="polite">DBG S00-IDLE</div>
             <button class="btn btn-outline" id="signup" type="button">Create Account</button>
             <p class="notice" id="auth-status"></p>
           </div>
@@ -114,6 +115,7 @@
       const tabSignIn = document.getElementById("tab-signin");
       const tabSignUp = document.getElementById("tab-signup");
       const authStatus = document.getElementById("auth-status");
+      const authDebug = document.getElementById("auth-debug");
       const authSpinner = document.getElementById("auth-spinner");
       const loginBtn = document.getElementById("login");
       const signupBtn = document.getElementById("signup");
@@ -237,6 +239,55 @@
       const onboardingAnswers = {};
 
       let session = null;
+      let authMode = "signin";
+      function addListener(el, eventName, handler, options) {
+        if (!el || typeof el.addEventListener !== "function") return;
+        el.addEventListener(eventName, handler, options);
+      }
+
+      function runIfFn(fn) {
+        if (typeof fn === "function") fn();
+      }
+
+      function pulseButton(el) {
+        if (!el) return;
+        el.classList.remove("pulse");
+        void el.offsetWidth;
+        el.classList.add("pulse");
+        setTimeout(() => el.classList.remove("pulse"), 220);
+      }
+
+      function debugElementLabel(node) {
+        if (!node || node.nodeType !== 1) return "unknown";
+        const id = node.id ? `#${node.id}` : "";
+        const className = node.classList && node.classList.length > 0 ? `.${Array.from(node.classList).slice(0, 2).join(".")}` : "";
+        return `${node.tagName.toLowerCase()}${id}${className}`;
+      }
+
+      function setAuthDebug(code, detail = "") {
+        if (!authDebug) return;
+        const time = new Date().toLocaleTimeString([], { hour12: false });
+        const suffix = detail ? ` ${detail}` : "";
+        authDebug.textContent = `DBG ${code}${suffix} @ ${time}`;
+        authDebug.classList.remove("is-error", "is-ok");
+        if (String(code || "").startsWith("E") || String(code || "").startsWith("B")) {
+          authDebug.classList.add("is-error");
+        } else if (String(code || "").startsWith("OK")) {
+          authDebug.classList.add("is-ok");
+        }
+      }
+
+      function checkSignupButtonBlock(event) {
+        if (authMode !== "signup" || !signupBtn || !authDebug) return;
+        if (typeof event.clientX !== "number" || typeof event.clientY !== "number") return;
+        const rect = signupBtn.getBoundingClientRect();
+        if (!rect || rect.width <= 0 || rect.height <= 0) return;
+        const inside = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+        if (!inside) return;
+        const target = event.target;
+        if (target === signupBtn || (target && signupBtn.contains(target))) return;
+        setAuthDebug("B01-BLOCKED", `by ${debugElementLabel(target)}`);
+      }
       function readCookie(name) {
         try {
           const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
@@ -503,11 +554,16 @@
       }
 
       function setAuthLoading(isLoading) {
-        authSpinner.classList.toggle("active", isLoading);
-        loginBtn.classList.toggle("is-loading", isLoading);
-        loginBtn.disabled = isLoading;
-        signupBtn.disabled = isLoading;
-        const loginLabel = loginBtn.querySelector("span");
+        if (authSpinner) authSpinner.classList.toggle("active", isLoading);
+        if (loginBtn) {
+          loginBtn.classList.toggle("is-loading", isLoading);
+          loginBtn.disabled = isLoading;
+        }
+        if (signupBtn) {
+          signupBtn.classList.toggle("is-loading", isLoading);
+          signupBtn.disabled = isLoading;
+        }
+        const loginLabel = loginBtn ? loginBtn.querySelector("span") : null;
         if (isLoading) {
           if (loginLabel) loginLabel.textContent = "Signing In...";
         } else {
@@ -516,15 +572,18 @@
       }
 
       function setAuthMode(mode) {
+        authMode = mode === "signup" ? "signup" : "signin";
         const isSignup = mode === "signup";
-        tabSignIn.classList.toggle("is-active", !isSignup);
-        tabSignUp.classList.toggle("is-active", isSignup);
-        signupNamesRow.style.display = isSignup ? "grid" : "none";
-        passwordConfirmEl.style.display = isSignup ? "block" : "none";
-        loginBtn.style.display = isSignup ? "none" : "inline-flex";
-        signupBtn.style.display = isSignup ? "inline-flex" : "none";
-        passwordEl.setAttribute("autocomplete", isSignup ? "new-password" : "current-password");
-        authStatus.textContent = "";
+        if (tabSignIn) tabSignIn.classList.toggle("is-active", !isSignup);
+        if (tabSignUp) tabSignUp.classList.toggle("is-active", isSignup);
+        if (signupNamesRow) signupNamesRow.style.display = isSignup ? "grid" : "none";
+        if (passwordConfirmEl) passwordConfirmEl.style.display = isSignup ? "block" : "none";
+        if (loginBtn) loginBtn.style.display = isSignup ? "none" : "inline-flex";
+        if (signupBtn) signupBtn.style.display = isSignup ? "inline-flex" : "none";
+        if (passwordEl) passwordEl.setAttribute("autocomplete", isSignup ? "new-password" : "current-password");
+        if (authStatus) authStatus.textContent = "";
+        if (authDebug) authDebug.style.display = isSignup ? "block" : "none";
+        setAuthDebug(isSignup ? "S10-SIGNUP-MODE" : "S00-SIGNIN-MODE");
       }
 
       function goToBilling() {
@@ -554,6 +613,30 @@
         return `${url}#${hash}`;
       }
 
+      function parseAuthError(payload) {
+        if (!payload || typeof payload !== "object") return "";
+        return payload.error_description || payload.msg || payload.error || payload.message || "";
+      }
+
+      async function signInWithPassword(email, password) {
+        const res = await supabaseRequest("/auth/v1/token?grant_type=password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+          skipAuth: true
+        });
+        let payload = null;
+        try { payload = await res.json(); } catch {}
+        if (!res.ok) {
+          return { ok: false, detail: parseAuthError(payload) || "request failed", payload: null };
+        }
+        if (!payload || !payload.access_token) {
+          return { ok: false, detail: "invalid session response", payload: null };
+        }
+        storeSession(payload);
+        return { ok: true, detail: "", payload };
+      }
+
       async function signIn() {
         const email = emailEl.value.trim();
         const password = passwordEl.value;
@@ -569,28 +652,12 @@
         authStatus.textContent = "Signing in...";
         try {
           clearSession();
-          const res = await supabaseRequest("/auth/v1/token?grant_type=password", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-            skipAuth: true
-          });
-          if (!res.ok) {
-            let detail = "";
-            try {
-              const payload = await res.json();
-              detail = (payload && (payload.error_description || payload.msg || payload.error)) || "";
-            } catch {}
-            authStatus.textContent = detail ? `Sign in failed: ${detail}` : "Sign in failed.";
-            return;
-          }
-          const payload = await res.json();
-          if (!payload || !payload.access_token) {
-            authStatus.textContent = "Sign in failed: invalid session response.";
+          const signInResult = await signInWithPassword(email, password);
+          if (!signInResult.ok) {
+            authStatus.textContent = signInResult.detail ? `Sign in failed: ${signInResult.detail}` : "Sign in failed.";
             return;
           }
           try { localStorage.setItem("wp_last_email", email); } catch {}
-          storeSession(payload);
           if (!hasSessionToken()) {
             authStatus.textContent = "Sign in failed: invalid session response.";
             return;
@@ -606,10 +673,12 @@
       }
 
       async function signUp() {
+        setAuthDebug("S20-CLICK", "create-account");
         const todayKey = new Date().toISOString().slice(0, 10);
         const last = getSignupLimitDay();
         if (last === todayKey) {
           authStatus.textContent = "Account creation limit reached for this device. Try again tomorrow.";
+          setAuthDebug("E30-LIMIT", "device daily limit");
           return;
         }
         const email = emailEl.value.trim();
@@ -619,26 +688,33 @@
         const lastName = lastNameEl.value.trim();
         if (!email || !password) {
           authStatus.textContent = "Enter email and password.";
+          setAuthDebug("E31-MISSING", "email/password");
           return;
         }
         if (!email.includes("@")) {
           authStatus.textContent = "Enter a valid email address.";
+          setAuthDebug("E32-EMAIL", "invalid email");
           return;
         }
         if (!firstName || !lastName) {
           authStatus.textContent = "Enter first and last name.";
+          setAuthDebug("E33-NAME", "first/last required");
           return;
         }
         if (password.length < 8) {
           authStatus.textContent = "Use a password with at least 8 characters.";
+          setAuthDebug("E34-PASSWORD", "min 8 chars");
           return;
         }
         if (password !== confirm) {
           authStatus.textContent = "Passwords do not match.";
+          setAuthDebug("E35-CONFIRM", "password mismatch");
           return;
         }
         setAuthLoading(true);
+        pulseButton(signupBtn);
         authStatus.textContent = "Creating account...";
+        setAuthDebug("S40-REQUEST", "signup request sent");
         try {
           clearSession();
           const res = await supabaseRequest("/auth/v1/signup", {
@@ -654,29 +730,58 @@
           let payload = null;
           try { payload = await res.json(); } catch {}
           if (!res.ok) {
-            const detail = payload && (payload.error_description || payload.msg || payload.error);
+            const detail = parseAuthError(payload);
+            if ((detail || "").toLowerCase().includes("already")) {
+              authStatus.textContent = "Account already exists. Signing in...";
+              setAuthDebug("E41-EXISTS", "trying sign-in");
+              const existing = await signInWithPassword(email, password);
+              if (existing.ok) {
+                try { localStorage.setItem("wp_last_email", email); } catch {}
+                authStatus.textContent = "Signed in. Finishing setup...";
+                setAuthDebug("OK42-EXISTS-SIGNED-IN");
+                await afterAuthSuccess();
+                return;
+              }
+              authStatus.textContent = "This email is already registered. Use Sign In or reset your password.";
+              setAuthDebug("E43-EXISTS-PASSWORD", "could not sign-in");
+              return;
+            }
             authStatus.textContent = detail ? `Sign up failed: ${detail}` : "Sign up failed.";
+            setAuthDebug("E44-SIGNUP", detail || "request failed");
             return;
           }
           try { localStorage.setItem("wp_last_email", email); } catch {}
           setSignupLimitDay(todayKey);
-          localStorage.setItem("wp_new_signup", "1");
+          try { localStorage.setItem("wp_new_signup", "1"); } catch {}
           if (payload && payload.access_token) {
             storeSession(payload);
             authStatus.textContent = "Account created. Finishing setup...";
+            setAuthDebug("OK50-SIGNED-UP", "session ready");
             await syncProfileFromAuth();
             await afterAuthSuccess();
           } else {
-            authStatus.textContent = "Account created. Check your email to confirm, then sign in.";
+            setAuthDebug("S51-NO-SESSION", "trying sign-in");
+            const signInResult = await signInWithPassword(email, password);
+            if (signInResult.ok) {
+              authStatus.textContent = "Account created. Finishing setup...";
+              setAuthDebug("OK52-AUTO-SIGNED-IN");
+              await syncProfileFromAuth();
+              await afterAuthSuccess();
+              return;
+            }
+            authStatus.textContent = "Account created. Check your email to confirm, then sign in to finish setup.";
+            setAuthDebug("E53-CONFIRM-EMAIL", "no session from signup");
           }
         } catch (error) {
           authStatus.textContent = `Sign up failed: ${(error && error.message) || "network error"}`;
+          setAuthDebug("E99-EXCEPTION", (error && error.message) || "network error");
         } finally {
           setAuthLoading(false);
         }
       }
 
       function toggleOnboarding(show) {
+        if (!onboardingOverlay) return;
         onboardingOverlay.classList.toggle("active", show);
         onboardingOverlay.setAttribute("aria-hidden", show ? "false" : "true");
         if (show) {
@@ -685,6 +790,7 @@
       }
 
       function resetOnboardingState() {
+        if (!onboardingOptions || !onboardingInput || !onboardingStatus) return;
         onboardingIndex = 0;
         Object.keys(onboardingAnswers).forEach((key) => delete onboardingAnswers[key]);
         onboardingOptions.innerHTML = "";
@@ -694,6 +800,7 @@
       }
 
       function setStepButtons() {
+        if (!onboardingBack || !onboardingNext || !onboardingSubmit || !onboardingSkip) return;
         onboardingBack.style.display = onboardingIndex === 0 ? "none" : "inline-flex";
         onboardingNext.style.display = onboardingIndex < onboardingSteps.length - 1 ? "inline-flex" : "none";
         onboardingSubmit.style.display = onboardingIndex === onboardingSteps.length - 1 ? "inline-flex" : "none";
@@ -701,12 +808,14 @@
       }
 
       function setProgress() {
+        if (!onboardingProgress || !onboardingStepCount) return;
         const progress = (onboardingIndex + 1) / onboardingSteps.length;
         onboardingProgress.style.width = `${Math.max(0, Math.min(1, progress)) * 100}%`;
         onboardingStepCount.textContent = `Step ${onboardingIndex + 1} of ${onboardingSteps.length}`;
       }
 
       function renderOptions(step) {
+        if (!onboardingOptions || !onboardingInput) return;
         onboardingOptions.innerHTML = "";
         onboardingInput.innerHTML = "";
         if (step.type === "text") {
@@ -768,6 +877,7 @@
       }
 
       function renderStep() {
+        if (!onboardingQuestion) return;
         const step = onboardingSteps[onboardingIndex];
         onboardingQuestion.textContent = step.question;
         renderOptions(step);
@@ -790,13 +900,13 @@
         return false;
       }
 
-      onboardingBack.addEventListener("click", () => {
+      addListener(onboardingBack, "click", () => {
         onboardingStatus.textContent = "";
         onboardingIndex = Math.max(0, onboardingIndex - 1);
         renderStep();
       });
 
-      onboardingNext.addEventListener("click", () => {
+      addListener(onboardingNext, "click", () => {
         if (!canAdvance()) {
           onboardingStatus.textContent = "Please select an option to continue.";
           return;
@@ -806,20 +916,20 @@
         renderStep();
       });
 
-      onboardingSkip.addEventListener("click", () => {
+      addListener(onboardingSkip, "click", () => {
         onboardingStatus.textContent = "";
         onboardingIndex = Math.min(onboardingSteps.length - 1, onboardingIndex + 1);
         renderStep();
       });
 
-      onboardingOptions.addEventListener("click", () => {
+      addListener(onboardingOptions, "click", () => {
         if (canAdvance() && onboardingIndex < onboardingSteps.length - 1) {
           onboardingNext.classList.add("pulse");
           setTimeout(() => onboardingNext.classList.remove("pulse"), 220);
         }
       });
 
-      onboardingClose.addEventListener("click", () => {
+      addListener(onboardingClose, "click", () => {
         toggleOnboarding(false);
         clearSession();
         localStorage.removeItem("wp_new_signup");
@@ -982,15 +1092,15 @@
       async function submitOnboarding(event) {
         event.preventDefault();
         await ensureSessionReady();
-        onboardingStatus.textContent = "Saving...";
-        onboardingSubmit.disabled = true;
+        if (onboardingStatus) onboardingStatus.textContent = "Saving...";
+        if (onboardingSubmit) onboardingSubmit.disabled = true;
         // All questions are optional; allow finishing without answers.
         const referralInput = (onboardingAnswers.referral || "").trim();
         if (referralInput) {
           const referralCheck = await validateReferral(referralInput);
           if (!referralCheck.ok) {
-            onboardingStatus.textContent = referralCheck.message || "Invalid referral code.";
-            onboardingSubmit.disabled = false;
+            if (onboardingStatus) onboardingStatus.textContent = referralCheck.message || "Invalid referral code.";
+            if (onboardingSubmit) onboardingSubmit.disabled = false;
             return;
           }
         }
@@ -1041,13 +1151,13 @@
             if (res.status === 401) {
               const refreshed = await refreshSession();
               if (refreshed) {
-                onboardingStatus.textContent = "Session refreshed. Saving...";
+                if (onboardingStatus) onboardingStatus.textContent = "Session refreshed. Saving...";
                 res = await sendOnboarding();
                 if (res.ok) {
                   const confirmed = await confirmOnboardingSaved();
                   if (!confirmed) {
-                    onboardingStatus.textContent = "We couldn't confirm your setup was saved. Please try again.";
-                    onboardingSubmit.disabled = false;
+                    if (onboardingStatus) onboardingStatus.textContent = "We couldn't confirm your setup was saved. Please try again.";
+                    if (onboardingSubmit) onboardingSubmit.disabled = false;
                     return;
                   }
                   return finishOnboarding();
@@ -1070,12 +1180,12 @@
           setPendingOnboarding(identityKey, payload);
           return finishOnboarding();
         } finally {
-          onboardingSubmit.disabled = false;
+          if (onboardingSubmit) onboardingSubmit.disabled = false;
         }
       }
 
       async function finishOnboarding() {
-        onboardingStatus.textContent = "Saved! Redirecting...";
+        if (onboardingStatus) onboardingStatus.textContent = "Saved! Redirecting...";
         toggleOnboarding(false);
         localStorage.removeItem("wp_new_signup");
         markOnboardingDone(getIdentityKey(getOnboardingUserId()));
@@ -1086,7 +1196,7 @@
         window.location.href = target;
       }
 
-      onboardingForm.addEventListener("submit", submitOnboarding);
+      addListener(onboardingForm, "submit", submitOnboarding);
 
 
       function navigateWithFade(url) {
@@ -1094,8 +1204,12 @@
         setTimeout(() => { window.location.href = url; }, 240);
       }
 
-      tabSignIn.addEventListener("click", () => setAuthMode("signin"));
-      tabSignUp.addEventListener("click", () => setAuthMode("signup"));
+      addListener(tabSignIn, "click", () => setAuthMode("signin"));
+      addListener(tabSignUp, "click", () => {
+        setAuthMode("signup");
+        runIfFn(() => firstNameEl && firstNameEl.focus());
+      });
+      addListener(document, "click", checkSignupButtonBlock, true);
 
       document.querySelectorAll(".page-link").forEach((link) => {
         link.addEventListener("click", (event) => {
@@ -1106,19 +1220,40 @@
         });
       });
 
-      loginBtn.addEventListener("click", (event) => {
+      addListener(loginBtn, "click", (event) => {
         event.preventDefault();
+        pulseButton(loginBtn);
         signIn();
       });
-      signupBtn.addEventListener("click", (event) => {
+      addListener(signupBtn, "click", (event) => {
         event.preventDefault();
+        setAuthDebug("S21-HANDLER", "signup handler running");
+        pulseButton(signupBtn);
         signUp();
       });
-      passwordEl.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") signIn();
+      function submitCurrentAuthMode(event) {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        if (authMode === "signup") {
+          signUp();
+          return;
+        }
+        signIn();
+      }
+      addListener(passwordEl, "keydown", (event) => {
+        submitCurrentAuthMode(event);
       });
-      emailEl.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") signIn();
+      addListener(emailEl, "keydown", (event) => {
+        submitCurrentAuthMode(event);
+      });
+      addListener(passwordConfirmEl, "keydown", (event) => {
+        submitCurrentAuthMode(event);
+      });
+      addListener(firstNameEl, "keydown", (event) => {
+        submitCurrentAuthMode(event);
+      });
+      addListener(lastNameEl, "keydown", (event) => {
+        submitCurrentAuthMode(event);
       });
 
       parseHashSession();
