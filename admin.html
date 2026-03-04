@@ -526,6 +526,60 @@
         }).join("");
       }
 
+      function parseContentRangeCount(value) {
+        if (!value || typeof value !== "string") return null;
+        const slash = value.lastIndexOf("/");
+        if (slash === -1) return null;
+        const raw = value.slice(slash + 1).trim();
+        if (!raw || raw === "*") return null;
+        const parsed = parseInt(raw, 10);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+
+      function isMissingListFunction(status, text) {
+        if (status !== 404) return false;
+        const body = String(text || "");
+        return /requested function was not found/i.test(body) || /"code":"NOT_FOUND"/i.test(body);
+      }
+
+      async function loadAccountsViaRest(filter) {
+        const params = new URLSearchParams({
+          select: "id,email,credits,subscription_tier,is_admin,referral_code,access_expires_at",
+          order: "email.asc",
+          offset: String(accountsOffset),
+          limit: String(ADMIN_ACCOUNTS_PAGE_SIZE)
+        });
+        if (filter) {
+          const cleaned = filter.replace(/\*/g, "").trim();
+          if (cleaned) params.set("email", `ilike.*${cleaned}*`);
+        }
+        const res = await adminFetch(`${SUPABASE_URL}/rest/v1/profiles?${params.toString()}`, {
+          headers: {
+            Prefer: "count=exact"
+          }
+        });
+        const text = await res.text();
+        if (!res.ok) {
+          return {
+            ok: false,
+            status: res.status,
+            text
+          };
+        }
+        let data = [];
+        try {
+          data = text ? JSON.parse(text) : [];
+        } catch {
+          data = [];
+        }
+        return {
+          ok: true,
+          source: "rest",
+          accounts: Array.isArray(data) ? data : [],
+          count: parseContentRangeCount(res.headers.get("content-range"))
+        };
+      }
+
       async function loadAccounts(options = {}) {
         if (!adminUnlocked) return;
         const resetOffset = !!options.resetOffset;
@@ -542,28 +596,48 @@
             offset: String(accountsOffset)
           });
           if (filter) params.set("q", filter);
-          const res = await adminFetch(`https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-list-accounts?${params.toString()}`);
-          const text = await res.text();
-          if (!res.ok) {
-            if (adminAccountsStatusEl) adminAccountsStatusEl.textContent = `Load failed: ${text}`;
+          const functionRes = await adminFetch(`https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-list-accounts?${params.toString()}`);
+          const functionText = await functionRes.text();
+
+          let source = "function";
+          let accounts = [];
+          let count = null;
+          if (functionRes.ok) {
+            const payload = JSON.parse(functionText);
+            accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
+            count = typeof payload.count === "number" ? payload.count : null;
+          } else if (isMissingListFunction(functionRes.status, functionText)) {
+            const restRes = await loadAccountsViaRest(filter);
+            if (!restRes.ok) {
+              if (adminAccountsStatusEl) adminAccountsStatusEl.textContent = `Load failed: ${restRes.text}`;
+              accountsLastLoaded = 0;
+              renderAccounts([]);
+              setAccountsControlsDisabled(false);
+              return;
+            }
+            source = restRes.source || "rest";
+            accounts = Array.isArray(restRes.accounts) ? restRes.accounts : [];
+            count = typeof restRes.count === "number" ? restRes.count : null;
+          } else {
+            if (adminAccountsStatusEl) adminAccountsStatusEl.textContent = `Load failed: ${functionText}`;
             accountsLastLoaded = 0;
             renderAccounts([]);
             setAccountsControlsDisabled(false);
             return;
           }
-          const payload = JSON.parse(text);
-          const accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
-          accountsTotal = typeof payload.count === "number" ? payload.count : null;
+
+          accountsTotal = count;
           accountsLastLoaded = accounts.length;
           renderAccounts(accounts);
           const start = accounts.length ? accountsOffset + 1 : 0;
           const end = accountsOffset + accounts.length;
           const totalText = accountsTotal === null ? "" : ` of ${accountsTotal}`;
           const filterText = filter ? ` matching "${filter}"` : "";
+          const sourceText = source === "rest" ? " (fallback mode)" : "";
           if (adminAccountsStatusEl) {
             adminAccountsStatusEl.textContent = accounts.length
-              ? `Showing ${start}-${end}${totalText}${filterText}.`
-              : `No accounts found${filterText}.`;
+              ? `Showing ${start}-${end}${totalText}${filterText}${sourceText}.`
+              : `No accounts found${filterText}${sourceText}.`;
           }
           setAccountsControlsDisabled(false);
         } catch (err) {
