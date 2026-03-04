@@ -459,24 +459,28 @@
         return true;
       }
 
-      function authHeaders(extra = {}) {
-        return {
+      function authHeaders(extra = {}, includeAdminHeaders = true) {
+        const headers = {
           ...extra,
           apikey: SUPABASE_ANON_KEY,
           Authorization: `Bearer ${session.access_token}`,
-          "X-Admin-Passkey": getPasskey(),
-          "X-Admin-User": getAdminUser(),
         };
+        if (includeAdminHeaders) {
+          headers["X-Admin-Passkey"] = getPasskey();
+          headers["X-Admin-User"] = getAdminUser();
+        }
+        return headers;
       }
 
       async function adminFetch(url, options = {}) {
+        const { includeAdminHeaders = true, ...fetchOptions } = options;
         const ready = await ensureSessionReady();
         if (!ready) throw new Error("Session expired. Please sign in again.");
-        let res = await fetch(url, { ...options, headers: authHeaders(options.headers || {}) });
+        let res = await fetch(url, { ...fetchOptions, headers: authHeaders(fetchOptions.headers || {}, includeAdminHeaders) });
         if (res.status === 401) {
           const refreshed = await refreshSession();
           if (refreshed) {
-            res = await fetch(url, { ...options, headers: authHeaders(options.headers || {}) });
+            res = await fetch(url, { ...fetchOptions, headers: authHeaders(fetchOptions.headers || {}, includeAdminHeaders) });
           }
         }
         return res;
@@ -554,6 +558,7 @@
           if (cleaned) params.set("email", `ilike.*${cleaned}*`);
         }
         const res = await adminFetch(`${SUPABASE_URL}/rest/v1/profiles?${params.toString()}`, {
+          includeAdminHeaders: false,
           headers: {
             Prefer: "count=exact"
           }
@@ -596,7 +601,9 @@
             offset: String(accountsOffset)
           });
           if (filter) params.set("q", filter);
-          const functionRes = await adminFetch(`https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-list-accounts?${params.toString()}`);
+          const functionRes = await adminFetch(`https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-list-accounts?${params.toString()}`, {
+            includeAdminHeaders: false
+          });
           const functionText = await functionRes.text();
 
           let source = "function";
@@ -978,6 +985,7 @@
         if (adminCodeResultEl) adminCodeResultEl.classList.add("is-hidden");
         try {
           const res = await adminFetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-generate-credit-code", {
+            includeAdminHeaders: false,
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ amount, note })
@@ -987,7 +995,12 @@
             if (adminCodeStatusEl) adminCodeStatusEl.textContent = text ? text : `Create failed (HTTP ${res.status}).`;
             return;
           }
-          const payload = JSON.parse(text);
+          let payload = null;
+          try {
+            payload = text ? JSON.parse(text) : null;
+          } catch {
+            payload = null;
+          }
           if (!payload || !payload.code) {
             if (adminCodeStatusEl) adminCodeStatusEl.textContent = "Create failed: missing code.";
             return;
