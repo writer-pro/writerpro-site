@@ -52,6 +52,7 @@
             </div>
           </div>
           <div class="cta-row" style="margin-top: 6px;">
+            <a class="btn btn-outline page-link" href="referral.html" id="referral-guide" style="white-space:nowrap;">How it works</a>
             <a class="btn btn-primary page-link" href="app.html" id="signin-link">Sign In</a>
           </div>
           <p class="notice" id="billing-status"></p>
@@ -650,11 +651,13 @@
         if (!entry || typeof entry === "string") {
           return `<div class="referral-item">${entry || "Credit update"}</div>`;
         }
-        const delta = typeof entry.delta === "number" ? entry.delta : (typeof entry.credits === "number" ? entry.credits : 0);
-        const sign = delta >= 0 ? "+" : "";
+        const rawAmount = entry.amount ?? entry.delta ?? entry.credits ?? 0;
+        const amount = typeof rawAmount === "number" ? rawAmount : (parseFloat(String(rawAmount)) || 0);
+        const sign = amount >= 0 ? "+" : "";
+        const prettyAmount = Number.isInteger(amount) ? String(amount) : amount.toFixed(1);
         const reason = entry.reason || entry.note || entry.type || "Credit update";
         const date = entry.created_at ? new Date(entry.created_at).toLocaleDateString() : "";
-        return `<div class="referral-item">${reason} • ${sign}${delta} credits${date ? " • " + date : ""}</div>`;
+        return `<div class="referral-item">${reason} • ${sign}${prettyAmount} credits${date ? " • " + date : ""}</div>`;
       }
 
       async function redeemLinkvertiseCode() {

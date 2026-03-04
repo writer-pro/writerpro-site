@@ -59,6 +59,27 @@
             </div>
             <p class="notice" id="admin-search-status"></p>
           </div>
+
+          <div class="admin-panel admin-search-panel" id="admin-accounts-panel" style="display:none;">
+            <div class="admin-panel-head">
+              <div>
+                <h3>All Accounts</h3>
+                <p class="subtle">Browse every account and run quick actions.</p>
+              </div>
+              <button class="btn btn-outline btn-compact" id="admin-accounts-refresh" type="button">Refresh</button>
+            </div>
+            <div class="input-group">
+              <input class="input" id="admin-accounts-query" type="search" placeholder="Filter by email" />
+              <button class="btn btn-outline" id="admin-accounts-search" type="button">Filter</button>
+            </div>
+            <p class="notice" id="admin-accounts-status">Verify access to load accounts.</p>
+            <div class="admin-account-list" id="admin-accounts-list">No accounts loaded yet.</div>
+            <div class="cta-row admin-account-pagination">
+              <button class="btn btn-outline btn-compact" id="admin-accounts-prev" type="button">Previous</button>
+              <button class="btn btn-outline btn-compact" id="admin-accounts-next" type="button">Next</button>
+            </div>
+          </div>
+
           <div class="admin-panel-head">
             <div>
               <h3>User Details</h3>
@@ -196,6 +217,11 @@
             <div class="referral-list" id="admin-purchase-history">No purchases yet.</div>
           </details>
 
+          <details class="admin-panel admin-referral-uses">
+            <summary>Credit History</summary>
+            <div class="referral-list" id="admin-credit-history">No credit activity yet.</div>
+          </details>
+
           <div class="cta-row admin-cta">
             <button class="btn btn-outline" id="admin-reset-form">Reset</button>
             <button class="btn btn-primary" id="admin-submit">Apply Changes</button>
@@ -241,6 +267,14 @@
       const searchEmailEl = document.getElementById("admin-search-email");
       const searchEl = document.getElementById("admin-search");
       const adminSearchPanelEl = document.getElementById("admin-search-panel");
+      const adminAccountsPanelEl = document.getElementById("admin-accounts-panel");
+      const adminAccountsQueryEl = document.getElementById("admin-accounts-query");
+      const adminAccountsSearchEl = document.getElementById("admin-accounts-search");
+      const adminAccountsRefreshEl = document.getElementById("admin-accounts-refresh");
+      const adminAccountsStatusEl = document.getElementById("admin-accounts-status");
+      const adminAccountsListEl = document.getElementById("admin-accounts-list");
+      const adminAccountsPrevEl = document.getElementById("admin-accounts-prev");
+      const adminAccountsNextEl = document.getElementById("admin-accounts-next");
       const loginPanelEl = document.getElementById("admin-login-panel");
       const adminContentWideEl = document.getElementById("admin-content-wide");
       const adminCodePanelEl = document.getElementById("admin-code-panel");
@@ -254,6 +288,7 @@
       const userReferralUsesEl = document.getElementById("admin-user-referral-uses");
       const referralUsesListEl = document.getElementById("admin-referral-uses-list");
       const purchaseHistoryEl = document.getElementById("admin-purchase-history");
+      const creditHistoryEl = document.getElementById("admin-credit-history");
 
       const emailEl = document.getElementById("admin-email");
       const emailSetEl = document.getElementById("admin-email-set");
@@ -283,15 +318,43 @@
       const adminCodeResultEl = document.getElementById("admin-code-result");
       const adminCodeOutputEl = document.getElementById("admin-code-output");
       const adminCodeCopyEl = document.getElementById("admin-code-copy");
+      const ADMIN_ACCOUNTS_PAGE_SIZE = 25;
       let adminUnlocked = false;
+      let accountsOffset = 0;
+      let accountsTotal = null;
+      let accountsLastLoaded = 0;
+      let loadedUserEmail = "";
+      let loadedUserIsAdmin = false;
+
+      function escapeHtml(value) {
+        const raw = String(value ?? "");
+        return raw.replace(/[&<>"']/g, (char) => {
+          if (char === "&") return "&amp;";
+          if (char === "<") return "&lt;";
+          if (char === ">") return "&gt;";
+          if (char === "\"") return "&quot;";
+          if (char === "'") return "&#39;";
+          return char;
+        });
+      }
 
       function setAdminUnlocked(value) {
         adminUnlocked = value;
         document.body.classList.toggle("admin-locked", !value);
         if (loginPanelEl) loginPanelEl.style.display = value ? "none" : "block";
         if (adminSearchPanelEl) adminSearchPanelEl.style.display = value ? "block" : "none";
+        if (adminAccountsPanelEl) adminAccountsPanelEl.style.display = value ? "block" : "none";
         if (adminContentWideEl) adminContentWideEl.style.display = value ? "block" : "none";
         if (adminCodePanelEl) adminCodePanelEl.style.display = value ? "block" : "none";
+        if (!value) {
+          accountsOffset = 0;
+          accountsTotal = null;
+          accountsLastLoaded = 0;
+          if (adminAccountsStatusEl) adminAccountsStatusEl.textContent = "Verify access to load accounts.";
+          if (adminAccountsListEl) adminAccountsListEl.textContent = "No accounts loaded yet.";
+          if (adminAccountsPrevEl) adminAccountsPrevEl.disabled = true;
+          if (adminAccountsNextEl) adminAccountsNextEl.disabled = true;
+        }
       }
 
       let session = null;
@@ -406,25 +469,171 @@
         };
       }
 
-      async function ensureAdmin() {
+      async function adminFetch(url, options = {}) {
+        const ready = await ensureSessionReady();
+        if (!ready) throw new Error("Session expired. Please sign in again.");
+        let res = await fetch(url, { ...options, headers: authHeaders(options.headers || {}) });
+        if (res.status === 401) {
+          const refreshed = await refreshSession();
+          if (refreshed) {
+            res = await fetch(url, { ...options, headers: authHeaders(options.headers || {}) });
+          }
+        }
+        return res;
+      }
+
+      function setAccountsControlsDisabled(disabled) {
+        if (adminAccountsSearchEl) adminAccountsSearchEl.disabled = disabled;
+        if (adminAccountsRefreshEl) adminAccountsRefreshEl.disabled = disabled;
+        if (adminAccountsPrevEl) adminAccountsPrevEl.disabled = disabled || accountsOffset <= 0;
+        if (adminAccountsNextEl) {
+          const canGoNext = accountsLastLoaded === ADMIN_ACCOUNTS_PAGE_SIZE
+            && (accountsTotal === null || (accountsOffset + accountsLastLoaded) < accountsTotal);
+          adminAccountsNextEl.disabled = disabled || !canGoNext;
+        }
+      }
+
+      function renderAccounts(accounts) {
+        if (!adminAccountsListEl) return;
+        if (!Array.isArray(accounts) || !accounts.length) {
+          adminAccountsListEl.textContent = "No accounts found.";
+          return;
+        }
+        adminAccountsListEl.innerHTML = accounts.map((account) => {
+          const rawEmail = typeof account.email === "string" ? account.email.trim().toLowerCase() : "";
+          const safeEmail = escapeHtml(rawEmail || "(no email)");
+          const safeEmailAttr = escapeHtml(rawEmail);
+          const actionDisabled = rawEmail ? "" : " disabled";
+          const safeTier = escapeHtml(account.subscription_tier || "writer");
+          const safeReferral = escapeHtml(account.referral_code || "—");
+          const safeId = escapeHtml(account.id || "");
+          const credits = typeof account.credits === "number" ? account.credits.toLocaleString() : "0";
+          const adminBadge = account.is_admin ? "Admin" : "User";
+          const toggleLabel = account.is_admin ? "Remove Admin" : "Make Admin";
+          return `<div class="admin-account-row">
+            <div class="admin-account-meta">
+              <strong>${safeEmail}</strong>
+              <span>${safeTier} • ${credits} credits • ${adminBadge} • Ref: ${safeReferral}</span>
+              <span class="subtle">ID: ${safeId}</span>
+            </div>
+            <div class="admin-account-actions">
+              <button class="btn btn-outline btn-compact" type="button" data-account-action="load" data-email="${safeEmailAttr}"${actionDisabled}>Load</button>
+              <button class="btn btn-outline btn-compact" type="button" data-account-action="add100" data-email="${safeEmailAttr}"${actionDisabled}>+100 Credits</button>
+              <button class="btn btn-outline btn-compact" type="button" data-account-action="toggle-admin" data-email="${safeEmailAttr}" data-is-admin="${account.is_admin ? "true" : "false"}"${actionDisabled}>${toggleLabel}</button>
+              <button class="btn btn-outline btn-compact" type="button" data-account-action="set-unlimited" data-email="${safeEmailAttr}"${actionDisabled}>Set Unlimited</button>
+            </div>
+          </div>`;
+        }).join("");
+      }
+
+      async function loadAccounts(options = {}) {
+        if (!adminUnlocked) return;
+        const resetOffset = !!options.resetOffset;
+        if (resetOffset) accountsOffset = 0;
+        setAccountsControlsDisabled(true);
+        if (adminAccountsStatusEl) adminAccountsStatusEl.textContent = "Loading accounts...";
+        try {
+          const filterRaw = options.query !== undefined
+            ? options.query
+            : (adminAccountsQueryEl && adminAccountsQueryEl.value ? adminAccountsQueryEl.value : "");
+          const filter = String(filterRaw || "").trim().toLowerCase();
+          const params = new URLSearchParams({
+            limit: String(ADMIN_ACCOUNTS_PAGE_SIZE),
+            offset: String(accountsOffset)
+          });
+          if (filter) params.set("q", filter);
+          const res = await adminFetch(`https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-list-accounts?${params.toString()}`);
+          const text = await res.text();
+          if (!res.ok) {
+            if (adminAccountsStatusEl) adminAccountsStatusEl.textContent = `Load failed: ${text}`;
+            accountsLastLoaded = 0;
+            renderAccounts([]);
+            setAccountsControlsDisabled(false);
+            return;
+          }
+          const payload = JSON.parse(text);
+          const accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
+          accountsTotal = typeof payload.count === "number" ? payload.count : null;
+          accountsLastLoaded = accounts.length;
+          renderAccounts(accounts);
+          const start = accounts.length ? accountsOffset + 1 : 0;
+          const end = accountsOffset + accounts.length;
+          const totalText = accountsTotal === null ? "" : ` of ${accountsTotal}`;
+          const filterText = filter ? ` matching "${filter}"` : "";
+          if (adminAccountsStatusEl) {
+            adminAccountsStatusEl.textContent = accounts.length
+              ? `Showing ${start}-${end}${totalText}${filterText}.`
+              : `No accounts found${filterText}.`;
+          }
+          setAccountsControlsDisabled(false);
+        } catch (err) {
+          if (adminAccountsStatusEl) adminAccountsStatusEl.textContent = `Load failed: ${err?.message || "network error"}`;
+          accountsLastLoaded = 0;
+          renderAccounts([]);
+          setAccountsControlsDisabled(false);
+        }
+      }
+
+      async function runQuickAccountAction(email, updates, successMessage) {
+        if (!adminUnlocked) {
+          accessStatusEl.textContent = "Verify access first.";
+          return;
+        }
+        const targetEmail = String(email || "").trim().toLowerCase();
+        if (!targetEmail) {
+          statusEl.textContent = "Missing account email.";
+          return;
+        }
+        statusEl.textContent = "Applying quick action...";
+        try {
+          const res = await adminFetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-update-user", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: targetEmail, ...updates })
+          });
+          const text = await res.text();
+          if (!res.ok) {
+            statusEl.textContent = `Quick action failed: ${text}`;
+            return;
+          }
+          let payload = null;
+          try {
+            payload = JSON.parse(text);
+          } catch {}
+          statusEl.textContent = successMessage;
+          if (payload && targetEmail === loadedUserEmail) {
+            setUserDetails(payload);
+          }
+          await loadAccounts();
+        } catch (err) {
+          statusEl.textContent = `Quick action failed: ${err?.message || "network error"}`;
+        }
+      }
+
+      async function ensureAdmin(options = {}) {
+        const refreshAccounts = options.refreshAccounts !== false;
+        const preserveLayout = options.preserveLayout === true;
         const hasUser = setAdminUser();
         const hasPasskey = setPasskey();
         accessStatusEl.textContent = "Checking access...";
         checkEl.disabled = true;
-        setAdminUnlocked(false);
+        if (!preserveLayout) setAdminUnlocked(false);
         await loadSession();
         const ready = await ensureSessionReady();
         if (!ready) {
+          setAdminUnlocked(false);
           window.location.href = "app.html?next=admin.html&skip_onboarding=1";
           checkEl.disabled = false;
           return false;
         }
         if (!hasUser || !getAdminUser()) {
+          setAdminUnlocked(false);
           accessStatusEl.textContent = "Missing admin username.";
           checkEl.disabled = false;
           return false;
         }
         if (!hasPasskey || !getPasskey()) {
+          setAdminUnlocked(false);
           accessStatusEl.textContent = "Missing passkey.";
           checkEl.disabled = false;
           return false;
@@ -450,34 +659,43 @@
             const text = await res.text();
             accessStatusEl.textContent = `Access denied: ${text}`;
             submitEl.disabled = true;
+            setAdminUnlocked(false);
             checkEl.disabled = false;
             return false;
           }
           accessStatusEl.textContent = "Admin access confirmed.";
           submitEl.disabled = false;
           setAdminUnlocked(true);
+          if (refreshAccounts) {
+            await loadAccounts({ resetOffset: true });
+          }
           checkEl.disabled = false;
           return true;
         } catch (err) {
           clearTimeout(timeoutId);
           accessStatusEl.textContent = `Access check failed: ${err?.message || "network error"}`;
+          setAdminUnlocked(false);
           checkEl.disabled = false;
           return false;
         }
       }
 
       function setUserDetails(data) {
+        loadedUserEmail = (data.email || "").trim().toLowerCase();
+        loadedUserIsAdmin = !!data.is_admin;
         userIdEl.textContent = data.id ? `ID: ${data.id}` : "No user loaded";
         if (userEmailEl) userEmailEl.textContent = data.email || "—";
         if (userCreditsEl) userCreditsEl.textContent = typeof data.credits === "number" ? data.credits.toLocaleString() : "—";
         if (userTierEl) userTierEl.textContent = data.subscription_tier || "—";
-        if (userAdminEl) userAdminEl.textContent = data.is_admin ? "Yes" : "No";
+        if (userAdminEl) userAdminEl.textContent = loadedUserIsAdmin ? "Yes" : "No";
         if (userReferralCodeEl) userReferralCodeEl.textContent = data.referral_code || "—";
         if (userReferralUsesEl) userReferralUsesEl.textContent = typeof data.referral_uses_count === "number" ? data.referral_uses_count.toString() : "—";
         updatePassPreview(data.access_expires_at || null);
         if (referralUsesListEl) {
           if (Array.isArray(data.referral_uses_emails) && data.referral_uses_emails.length) {
-            referralUsesListEl.innerHTML = data.referral_uses_emails.map((email) => `<div class="referral-item">${email}</div>`).join("");
+            referralUsesListEl.innerHTML = data.referral_uses_emails
+              .map((email) => `<div class="referral-item">${escapeHtml(email)}</div>`)
+              .join("");
           } else {
             referralUsesListEl.textContent = "No uses yet.";
           }
@@ -488,12 +706,28 @@
               const amount = typeof entry.amount_cents === "number" ? (entry.amount_cents / 100).toFixed(2) : "—";
               const currency = entry.currency ? entry.currency.toUpperCase() : "USD";
               const credits = typeof entry.credits === "number" ? entry.credits.toLocaleString() : "—";
-              const pack = entry.pack_id || "Manual";
-              const status = entry.status || "paid";
+              const pack = escapeHtml(entry.pack_id || "Manual");
+              const status = escapeHtml(entry.status || "paid");
               return `<div class="referral-item">${pack} • ${credits} credits • ${currency} ${amount} • ${status}</div>`;
             }).join("");
           } else {
             purchaseHistoryEl.textContent = "No purchases yet.";
+          }
+        }
+        if (creditHistoryEl) {
+          if (Array.isArray(data.credit_history) && data.credit_history.length) {
+            creditHistoryEl.innerHTML = data.credit_history.map((entry) => {
+              const rawAmount = entry.amount ?? 0;
+              const amount = typeof rawAmount === "number" ? rawAmount : (parseFloat(String(rawAmount)) || 0);
+              const sign = amount >= 0 ? "+" : "";
+              const pretty = Number.isInteger(amount) ? String(amount) : amount.toFixed(1);
+              const reason = escapeHtml(entry.reason || entry.type || "Credit update");
+              const date = entry.created_at ? new Date(entry.created_at).toLocaleString() : "";
+              const safeDate = escapeHtml(date);
+              return `<div class="referral-item">${reason} • ${sign}${pretty} credits${safeDate ? " • " + safeDate : ""}</div>`;
+            }).join("");
+          } else {
+            creditHistoryEl.textContent = "No credit activity yet.";
           }
         }
         emailEl.value = data.email || "";
@@ -502,7 +736,7 @@
         setEl.value = "";
         if (referralCodeSetEl) referralCodeSetEl.value = "";
         tierEl.value = "";
-        adminToggleEl.checked = !!data.is_admin;
+        adminToggleEl.checked = loadedUserIsAdmin;
         passEl.value = "";
         passConfirmEl.value = "";
         if (passAddEl) passAddEl.value = "";
@@ -510,8 +744,8 @@
         if (purchasePackEl) purchasePackEl.value = "";
         if (purchaseCreditsEl) purchaseCreditsEl.value = "";
         if (purchaseAmountEl) purchaseAmountEl.value = "";
-        if (purchaseCurrencyEl) purchaseCurrencyEl.value = "";
-        if (purchaseStatusEl) purchaseStatusEl.value = "";
+        if (purchaseCurrencyEl) purchaseCurrencyEl.value = "usd";
+        if (purchaseStatusEl) purchaseStatusEl.value = "paid";
       }
 
       async function searchUser() {
@@ -521,11 +755,12 @@
           searchStatusEl.textContent = "Enter an email.";
           return;
         }
-        if (!await ensureAdmin()) return;
+        const wasUnlocked = adminUnlocked;
+        if (!await ensureAdmin({ refreshAccounts: !wasUnlocked, preserveLayout: wasUnlocked })) return;
         try {
-          const res = await fetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-search", {
+          const res = await adminFetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-search", {
             method: "POST",
-            headers: authHeaders({ "Content-Type": "application/json" }),
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email })
           });
           const text = await res.text();
@@ -574,9 +809,9 @@
         }
 
         try {
-          const res = await fetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-update-user", {
+          const res = await adminFetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-update-user", {
             method: "POST",
-            headers: authHeaders({ "Content-Type": "application/json" }),
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
           const text = await res.text();
@@ -587,6 +822,7 @@
           const data = JSON.parse(text);
           statusEl.textContent = `Updated ${data.email} → ${data.credits} credits, tier ${data.subscription_tier}`;
           setUserDetails(data);
+          await loadAccounts();
         } catch (err) {
           statusEl.textContent = `Update failed: ${err.message || "network error"}`;
         }
@@ -616,9 +852,9 @@
         };
         statusEl.textContent = "Adding purchase...";
         try {
-          const res = await fetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-update-user", {
+          const res = await adminFetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-update-user", {
             method: "POST",
-            headers: authHeaders({ "Content-Type": "application/json" }),
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
           const text = await res.text();
@@ -640,14 +876,17 @@
         setEl.value = "";
         if (referralCodeSetEl) referralCodeSetEl.value = "";
         tierEl.value = "";
-        adminToggleEl.checked = false;
+        adminToggleEl.checked = loadedUserIsAdmin;
         passEl.value = "";
         passConfirmEl.value = "";
         if (passAddEl) passAddEl.value = "";
         if (passRemoveEl) passRemoveEl.value = "";
         statusEl.textContent = "";
+        if (purchasePackEl) purchasePackEl.value = "";
         if (purchaseCreditsEl) purchaseCreditsEl.value = "";
         if (purchaseAmountEl) purchaseAmountEl.value = "";
+        if (purchaseCurrencyEl) purchaseCurrencyEl.value = "usd";
+        if (purchaseStatusEl) purchaseStatusEl.value = "paid";
       }
 
       async function createCreditCode() {
@@ -664,9 +903,9 @@
         if (adminCodeStatusEl) adminCodeStatusEl.textContent = "Creating code...";
         if (adminCodeResultEl) adminCodeResultEl.classList.add("is-hidden");
         try {
-          const res = await fetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-generate-credit-code", {
+          const res = await adminFetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-generate-credit-code", {
             method: "POST",
-            headers: authHeaders({ "Content-Type": "application/json" }),
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ amount, note })
           });
           const text = await res.text();
@@ -717,13 +956,77 @@
         });
       });
 
-      checkEl.addEventListener("click", ensureAdmin);
+      checkEl.addEventListener("click", () => ensureAdmin());
       searchEl.addEventListener("click", searchUser);
       if (searchEmailEl) {
         searchEmailEl.addEventListener("keydown", (event) => {
           if (event.key === "Enter") {
             event.preventDefault();
             searchUser();
+          }
+        });
+      }
+      if (adminAccountsSearchEl) {
+        adminAccountsSearchEl.addEventListener("click", async () => {
+          const query = adminAccountsQueryEl && adminAccountsQueryEl.value ? adminAccountsQueryEl.value : "";
+          await loadAccounts({ resetOffset: true, query });
+        });
+      }
+      if (adminAccountsRefreshEl) {
+        adminAccountsRefreshEl.addEventListener("click", async () => {
+          const query = adminAccountsQueryEl && adminAccountsQueryEl.value ? adminAccountsQueryEl.value : "";
+          await loadAccounts({ resetOffset: true, query });
+        });
+      }
+      if (adminAccountsQueryEl) {
+        adminAccountsQueryEl.addEventListener("keydown", async (event) => {
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          const query = adminAccountsQueryEl.value || "";
+          await loadAccounts({ resetOffset: true, query });
+        });
+      }
+      if (adminAccountsPrevEl) {
+        adminAccountsPrevEl.addEventListener("click", async () => {
+          if (accountsOffset <= 0) return;
+          accountsOffset = Math.max(0, accountsOffset - ADMIN_ACCOUNTS_PAGE_SIZE);
+          await loadAccounts();
+        });
+      }
+      if (adminAccountsNextEl) {
+        adminAccountsNextEl.addEventListener("click", async () => {
+          const canGoNext = accountsLastLoaded === ADMIN_ACCOUNTS_PAGE_SIZE
+            && (accountsTotal === null || (accountsOffset + accountsLastLoaded) < accountsTotal);
+          if (!canGoNext) return;
+          accountsOffset += ADMIN_ACCOUNTS_PAGE_SIZE;
+          await loadAccounts();
+        });
+      }
+      if (adminAccountsListEl) {
+        adminAccountsListEl.addEventListener("click", async (event) => {
+          const target = event.target instanceof Element ? event.target.closest("button[data-account-action]") : null;
+          if (!target) return;
+          const action = target.getAttribute("data-account-action") || "";
+          const email = (target.getAttribute("data-email") || "").trim().toLowerCase();
+          if (!email) return;
+          if (action === "load") {
+            if (searchEmailEl) searchEmailEl.value = email;
+            await searchUser();
+            return;
+          }
+          if (action === "add100") {
+            await runQuickAccountAction(email, { credits_add: 100 }, `Added 100 credits to ${email}.`);
+            return;
+          }
+          if (action === "toggle-admin") {
+            const current = target.getAttribute("data-is-admin") === "true";
+            const next = !current;
+            const label = next ? "Granted admin access" : "Removed admin access";
+            await runQuickAccountAction(email, { is_admin_set: next }, `${label} for ${email}.`);
+            return;
+          }
+          if (action === "set-unlimited") {
+            await runQuickAccountAction(email, { subscription_tier: "unlimited" }, `Set ${email} to unlimited tier.`);
           }
         });
       }
@@ -745,9 +1048,9 @@
           }
           statusEl.textContent = "Clearing pass...";
           try {
-            const res = await fetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-update-user", {
+            const res = await adminFetch("https://vnzlaidwxgiaowhxtuvi.functions.supabase.co/admin-update-user", {
               method: "POST",
-              headers: authHeaders({ "Content-Type": "application/json" }),
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ email, access_expires_clear: true })
             });
             const text = await res.text();
@@ -758,6 +1061,7 @@
             const data = JSON.parse(text);
             statusEl.textContent = "Unlimited pass cleared.";
             setUserDetails(data);
+            await loadAccounts();
           } catch (err) {
             statusEl.textContent = `Clear failed: ${err.message || "network error"}`;
           }

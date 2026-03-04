@@ -33,35 +33,56 @@
       <div class="legal-shell">
         <div class="legal-card">
           <h2>Before you start</h2>
-          <p class="subtle">Accessibility access lets WriterPro control typing in your target app. It’s required for typing sessions.</p>
-          <div class="legal-note">You only need to enable this once.</div>
+          <p class="subtle">WriterPro needs Accessibility + Input Monitoring so it can detect your text box and type into other apps.</p>
+          <div class="legal-note">Enable both permissions once, then you’re done.</div>
         </div>
 
         <div class="legal-card">
           <h2>Step‑by‑step (macOS)</h2>
           <div class="step-list">
-            <div class="step-row">
+            <div class="step-row" id="open-settings">
               <div class="step-index">1</div>
               <div class="step-body">
                 <h3>Open System Settings</h3>
-                <p>Apple menu → System Settings.</p>
-                <div class="step-media">Screenshot placeholder</div>
+                <p>Open the Apple menu, then choose System Settings.</p>
+                <div class="step-media">
+                  <div class="dropzone has-image" data-drop-slot="accessibility-step-1" style="background-image:url('assets/tutorials/open-system-settings-step-1.png');">
+                    <div class="dropzone-placeholder">
+                      <div class="dropzone-title">Screenshot placeholder</div>
+                      <div class="dropzone-hint">Drag & drop Apple menu screenshot</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="step-row">
+            <div class="step-row" id="accessibility-pane">
               <div class="step-index">2</div>
               <div class="step-body">
                 <h3>Go to Privacy &amp; Security → Accessibility</h3>
-                <p>Select Accessibility from the left sidebar.</p>
-                <div class="step-media">Screenshot placeholder</div>
+                <p>Privacy &amp; Security → Accessibility in the left sidebar.</p>
+                <div class="step-media">
+                  <div class="dropzone has-image" data-drop-slot="accessibility-step-2" style="background-image:url('assets/tutorials/privacy-security-accessibility-step-2-circled.png');">
+                    <div class="dropzone-placeholder">
+                      <div class="dropzone-title">Screenshot placeholder</div>
+                      <div class="dropzone-hint">Drag & drop Accessibility settings screenshot</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="step-row">
               <div class="step-index">3</div>
               <div class="step-body">
                 <h3>Unlock changes</h3>
-                <p>Click the lock icon and confirm with Touch ID or password.</p>
-                <div class="step-media">Screenshot placeholder</div>
+                <p>Click the lock icon, then confirm with Touch ID or your password.</p>
+                <div class="step-media">
+                  <div class="dropzone has-image" data-drop-slot="accessibility-step-3" style="background-image:url('assets/tutorials/accessibility-step-3-plus-circled-writerpro-only.png');">
+                    <div class="dropzone-placeholder">
+                      <div class="dropzone-title">Screenshot placeholder</div>
+                      <div class="dropzone-hint">Drag & drop unlock dialog screenshot</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="step-row">
@@ -69,15 +90,74 @@
               <div class="step-body">
                 <h3>Enable WriterPro</h3>
                 <p>Find WriterPro in the list and toggle it on.</p>
-                <div class="step-media">Screenshot placeholder</div>
+                <div class="step-media">
+                  <div class="dropzone has-image" data-drop-slot="accessibility-step-4" style="background-image:url('assets/tutorials/accessibility-step-4-select-writerpro-circled.png');">
+                    <div class="dropzone-placeholder">
+                      <div class="dropzone-title">Screenshot placeholder</div>
+                      <div class="dropzone-hint">Drag & drop toggle-on screenshot</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="step-row">
               <div class="step-index">5</div>
               <div class="step-body">
                 <h3>Return to WriterPro</h3>
-                <p>Back in the app, click “I’ve Enabled Access”.</p>
-                <div class="step-media">Screenshot placeholder</div>
+                <p>Return to WriterPro, click “I’ve Enabled Both,” and continue.</p>
+                <div class="step-media">
+                  <div class="dropzone has-image" data-drop-slot="accessibility-step-5" style="background-image:url('assets/tutorials/win-app-dashboard.png');">
+                    <div class="dropzone-placeholder">
+                      <div class="dropzone-title">Screenshot placeholder</div>
+                      <div class="dropzone-hint">Drag & drop WriterPro confirmation screenshot</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="step-row" id="input-monitoring">
+              <div class="step-index">6</div>
+              <div class="step-body">
+                <h3>Go to Privacy &amp; Security → Input Monitoring</h3>
+                <p>In System Settings, open Input Monitoring.</p>
+                <div class="step-media">
+                  <div class="dropzone has-image" data-drop-slot="accessibility-step-6" style="background-image:url('assets/tutorials/win-input-monitoring.png');">
+                    <div class="dropzone-placeholder">
+                      <div class="dropzone-title">Screenshot placeholder</div>
+                      <div class="dropzone-hint">Drag & drop Input Monitoring screen</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="step-row">
+              <div class="step-index">7</div>
+              <div class="step-body">
+                <h3>Enable WriterPro (Input Monitoring)</h3>
+                <p>Toggle WriterPro on so the app can detect your clicks.</p>
+                <div class="step-media">
+                  <div class="dropzone has-image" data-drop-slot="accessibility-step-7" style="background-image:url('assets/tutorials/win-input-monitoring.png');">
+                    <div class="dropzone-placeholder">
+                      <div class="dropzone-title">Screenshot placeholder</div>
+                      <div class="dropzone-hint">Drag & drop toggle-on screenshot</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="step-row">
+              <div class="step-index">8</div>
+              <div class="step-body">
+                <h3>Confirm Enabled and Restart App</h3>
+                <p>When Accessibility and Input Monitoring both show Enabled, click "Restart App" to finish setup.</p>
+                <div class="step-media">
+                  <div class="dropzone has-image" data-drop-slot="accessibility-step-8" style="background-image:url('assets/tutorials/accessibility-step-8-enabled-restart.png');">
+                    <div class="dropzone-placeholder">
+                      <div class="dropzone-title">Screenshot placeholder</div>
+                      <div class="dropzone-hint">Drag & drop enabled + restart screen</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -86,7 +166,7 @@
         <div class="legal-card">
           <h2>Not seeing WriterPro?</h2>
           <ul class="legal-list">
-            <li>Open WriterPro once, then return to Accessibility.</li>
+            <li>Open WriterPro once, then return to Accessibility or Input Monitoring.</li>
             <li>Use the “+” button to add WriterPro manually if needed.</li>
             <li>Restart WriterPro if the toggle doesn’t appear.</li>
           </ul>
@@ -125,6 +205,53 @@
           navigateWithFade(href);
         });
       });
+
+      function initDropzones() {
+        const zones = document.querySelectorAll(".dropzone");
+        zones.forEach((zone) => {
+          const slot = zone.dataset.dropSlot || "";
+          const storageKey = slot ? `wp_drop_${slot}` : "";
+          if (storageKey) {
+            const saved = localStorage.getItem(storageKey);
+            if (saved) {
+              zone.style.backgroundImage = `url('${saved}')`;
+              zone.classList.add("has-image");
+            }
+          }
+
+          function loadFile(file) {
+            if (!file || !file.type.startsWith("image/")) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+              const url = reader.result;
+              zone.style.backgroundImage = `url('${url}')`;
+              zone.classList.add("has-image");
+              if (storageKey) localStorage.setItem(storageKey, url);
+            };
+            reader.readAsDataURL(file);
+          }
+
+          zone.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            zone.classList.add("is-hover");
+          });
+          zone.addEventListener("dragleave", () => zone.classList.remove("is-hover"));
+          zone.addEventListener("drop", (event) => {
+            event.preventDefault();
+            zone.classList.remove("is-hover");
+            const file = event.dataTransfer.files && event.dataTransfer.files[0];
+            loadFile(file);
+          });
+          zone.addEventListener("click", () => {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = "image/*";
+            input.onchange = () => loadFile(input.files && input.files[0]);
+            input.click();
+          });
+        });
+      }
+      initDropzones();
     </script>
   </body>
 </html>

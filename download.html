@@ -79,6 +79,7 @@
         <div class="card">
           <h3>INSTALL CHECKLIST</h3>
           <p>macOS 12+, unzip if prompted, drag to Applications, then sign in.</p>
+          <a class="btn btn-outline page-link" href="#install-walkthrough">Open Install Tutorial</a>
         </div>
         <div class="card">
           <h3>SECURITY</h3>
@@ -91,6 +92,85 @@
         <div class="card">
           <h3>NEED HELP?</h3>
           <p>Sign in to access billing and account settings before installing.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="install-walkthrough">
+      <div class="legal-shell">
+        <div class="legal-card">
+          <h2>INSTALL TUTORIAL (DRAG TO APPLICATIONS)</h2>
+          <p class="subtle">This is the exact flow your users see after downloading WriterPro.</p>
+          <div class="legal-note">Screenshots are pre-filled, and the DMG steps now include a drag-to-Applications install graphic.</div>
+        </div>
+
+        <div class="legal-card">
+          <h2>Step-by-step</h2>
+          <div class="step-list">
+            <div class="step-row">
+              <div class="step-index">1</div>
+              <div class="step-body">
+                <h3>Open the downloaded DMG</h3>
+                <p>Double-click <strong>WriterPro.dmg</strong> to open the installer window shown below.</p>
+                <div class="step-media">
+                  <div class="dropzone dropzone-illustration has-image" data-drop-slot="install-step-1-v2" style="background-image:url('assets/tutorials/dmg-window-open.svg');">
+                    <div class="dropzone-placeholder">
+                      <div class="dropzone-title">Installer window graphic</div>
+                      <div class="dropzone-hint">Drag & drop to replace</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="step-row">
+              <div class="step-index">2</div>
+              <div class="step-body">
+                <h3>Drag WriterPro into Applications</h3>
+                <p>Drag the <strong>WriterPro.app</strong> icon and drop it onto the <strong>Applications</strong> folder.</p>
+                <div class="step-media">
+                  <div class="dropzone dropzone-illustration has-image" data-drop-slot="install-step-2-v2" style="background-image:url('assets/tutorials/dmg-drag-to-applications.svg');">
+                    <div class="dropzone-placeholder">
+                      <div class="dropzone-title">Drag-to-Applications graphic</div>
+                      <div class="dropzone-hint">Drag & drop to replace</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="step-row">
+              <div class="step-index">3</div>
+              <div class="step-body">
+                <h3>Launch WriterPro</h3>
+                <p>Open WriterPro from Applications the first time to complete setup.</p>
+                <div class="step-media">
+                  <div class="dropzone has-image" data-drop-slot="install-step-3" style="background-image:url('assets/tutorials/win-app-dashboard.png');">
+                    <div class="dropzone-placeholder">
+                      <div class="dropzone-title">WriterPro launch screenshot</div>
+                      <div class="dropzone-hint">Drag & drop to replace</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="step-row">
+              <div class="step-index">4</div>
+              <div class="step-body">
+                <h3>Open permissions tutorial</h3>
+                <p>If prompted, follow the Accessibility and Input Monitoring guide.</p>
+                <div class="step-media">
+                  <div class="dropzone has-image" data-drop-slot="install-step-4" style="background-image:url('assets/tutorials/system-accessibility-full-2.png');">
+                    <div class="dropzone-placeholder">
+                      <div class="dropzone-title">Permissions setup screenshot</div>
+                      <div class="dropzone-hint">Drag & drop to replace</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -238,6 +318,53 @@
         agreeCheck.checked = false;
         confirmBtn.disabled = true;
       }
+
+      function initDropzones() {
+        const zones = document.querySelectorAll(".dropzone");
+        zones.forEach((zone) => {
+          const slot = zone.dataset.dropSlot || "";
+          const storageKey = slot ? `wp_drop_${slot}` : "";
+          if (storageKey) {
+            const saved = localStorage.getItem(storageKey);
+            if (saved) {
+              zone.style.backgroundImage = `url('${saved}')`;
+              zone.classList.add("has-image");
+            }
+          }
+
+          function loadFile(file) {
+            if (!file || !file.type.startsWith("image/")) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+              const url = reader.result;
+              zone.style.backgroundImage = `url('${url}')`;
+              zone.classList.add("has-image");
+              if (storageKey) localStorage.setItem(storageKey, url);
+            };
+            reader.readAsDataURL(file);
+          }
+
+          zone.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            zone.classList.add("is-hover");
+          });
+          zone.addEventListener("dragleave", () => zone.classList.remove("is-hover"));
+          zone.addEventListener("drop", (event) => {
+            event.preventDefault();
+            zone.classList.remove("is-hover");
+            const file = event.dataTransfer.files && event.dataTransfer.files[0];
+            loadFile(file);
+          });
+          zone.addEventListener("click", () => {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = "image/*";
+            input.onchange = () => loadFile(input.files && input.files[0]);
+            input.click();
+          });
+        });
+      }
+      initDropzones();
     </script>
   </body>
 </html>
