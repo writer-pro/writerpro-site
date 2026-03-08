@@ -24,6 +24,7 @@
           <a class="btn btn-outline page-link is-disabled" id="nav-dashboard" href="billing.html" aria-disabled="true">DASHBOARD</a>
           <a class="btn btn-outline page-link" id="nav-auth" href="app.html">SIGN IN</a>
           <a class="btn btn-primary js-download" href="WriterPro.dmg" data-download="WriterPro.dmg">DOWNLOAD</a>
+          <a class="btn btn-outline js-add-to-chrome" href="https://chromewebstore.google.com/detail/writerpro/pdgaacfbcnkmcnchknhimkcfmfghchii">ADD TO CHROME</a>
         </div>
       </nav>
 
@@ -33,6 +34,7 @@
           <p class="subtitle">Grab the latest macOS build with verified updates and version info.</p>
           <div class="cta-row">
             <a class="btn btn-primary btn-lg js-download" href="WriterPro.dmg" data-download="WriterPro.dmg">DOWNLOAD FOR macOS</a>
+            <a class="btn btn-outline btn-lg js-add-to-chrome" href="https://chromewebstore.google.com/detail/writerpro/pdgaacfbcnkmcnchknhimkcfmfghchii">ADD TO CHROME</a>
             <a class="btn btn-outline btn-lg page-link" href="index.html">BACK TO HOME</a>
           </div>
           <div class="hero-stats">
@@ -87,7 +89,8 @@
         </div>
         <div class="card">
           <h3>CHROME EXTENSION</h3>
-          <p>Google Chrome extension is coming soon.</p>
+          <p>Install WriterPro for Chrome from the official Chrome Web Store.</p>
+          <a class="btn btn-outline js-add-to-chrome" href="https://chromewebstore.google.com/detail/writerpro/pdgaacfbcnkmcnchknhimkcfmfghchii">ADD TO CHROME</a>
         </div>
         <div class="card">
           <h3>NEED HELP?</h3>
@@ -279,20 +282,34 @@
       const confirmBtn = document.getElementById("download-confirm");
       const cancelBtn = document.getElementById("download-cancel");
       const downloadLinks = document.querySelectorAll(".js-download");
+      const addToChromeLinks = document.querySelectorAll(".js-add-to-chrome");
+      const CHROME_WEBSTORE_URL = "https://chromewebstore.google.com/detail/writerpro/pdgaacfbcnkmcnchknhimkcfmfghchii";
       let downloadHref = "WriterPro.dmg";
+
+      function requireSignIn(nextPath) {
+        if (hasSessionToken()) return true;
+        navigateWithFade(`app.html?next=${encodeURIComponent(nextPath)}`);
+        return false;
+      }
 
       downloadLinks.forEach((link) => {
         link.addEventListener("click", (e) => {
           e.preventDefault();
-          if (!hasSessionToken()) {
-            navigateWithFade("app.html?next=download.html%3Fdownload%3D1");
-            return;
-          }
+          if (!requireSignIn("download.html?download=1")) return;
           downloadHref = link.getAttribute("data-download") || "WriterPro.dmg";
           modal.classList.remove("hidden");
           modal.scrollIntoView({ block: "center" });
           agreeCheck.checked = false;
           confirmBtn.disabled = true;
+        });
+      });
+
+      addToChromeLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          if (!requireSignIn("download.html?chrome=1")) return;
+          const target = link.getAttribute("href") || CHROME_WEBSTORE_URL;
+          window.location.href = target;
         });
       });
 
@@ -312,7 +329,9 @@
       loadSession();
       updateNavAuthState();
       const params = new URLSearchParams(window.location.search);
-      if (params.get("download") === "1" && hasSessionToken()) {
+      if (params.get("chrome") === "1" && hasSessionToken()) {
+        window.location.href = CHROME_WEBSTORE_URL;
+      } else if (params.get("download") === "1" && hasSessionToken()) {
         modal.classList.remove("hidden");
         modal.scrollIntoView({ block: "center" });
         agreeCheck.checked = false;
